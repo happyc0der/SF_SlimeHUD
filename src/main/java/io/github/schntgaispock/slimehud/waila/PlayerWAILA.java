@@ -21,6 +21,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
 
 public final class PlayerWAILA {
 
@@ -147,13 +148,19 @@ public final class PlayerWAILA {
         boolean showItems = SlimeHUD.getInstance().getConfig().getBoolean("items.enabled", true);
 
         Location eye = player.getEyeLocation();
-        RayTraceResult trace = player.getWorld().rayTrace(
+        Vector direction = eye.getDirection();
+        double ownedDistance = HudRayTraceBounds.maximumOwnedDistance(eye.getWorld(), eye, direction, maxDistance);
+        if (ownedDistance <= 0) {
+            applySnapshot(sequence, new HudSnapshot("", ""));
+            return;
+        }
+        RayTraceResult trace = eye.getWorld().rayTrace(
                 eye,
-                eye.getDirection(),
-                maxDistance,
+                direction,
+                ownedDistance,
                 FluidCollisionMode.NEVER,
                 true,
-                0.2D,
+                HudRayTraceBounds.ENTITY_RAY_SIZE,
                 entity -> showItems && entity instanceof Item);
 
         if (trace == null) {
@@ -167,7 +174,7 @@ public final class PlayerWAILA {
         }
 
         Block hitBlock = trace.getHitBlock();
-        if (hitBlock == null || hitBlock.getType().isAir()) {
+        if (hitBlock == null) {
             applySnapshot(sequence, new HudSnapshot("", ""));
             return;
         }

@@ -1,0 +1,9 @@
+name: SlimeHudRegionProbe
+version: '1.0'
+main: io.github.schntgaispock.slimehud.probe.SlimeHudRegionProbe
+api-version: '1.21.11'
+folia-supported: true
+depend: [SlimeHUD]
+commands:
+  hudregionprobe:
+    description: Disposable native HUD ownership regression fixture

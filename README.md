@@ -1,6 +1,16 @@
-# SF_SlimeHUD 2.0.4
+# SF_SlimeHUD 2.0.5 — unreleased candidate
 
 A modernized SlimeHUD fork for **Slimefun Legacy** and Minecraft **1.21.11+** on Paper-family servers.
+
+## Changes prepared for 2.0.5
+
+- Keeps native HUD ray queries inside the current thread's owned chunks on Folia, including the extra area used to find dropped items. Long configured or integration-provided ranges are shortened at ownership boundaries while nearby blocks and items remain visible.
+- Preserves the exact requested range when the entire query is owned, including ordinary Paper/Purpur operation.
+- Clears stale labels when no safe ray or target exists. Block details continue to be read on their owning region and item details on their owning entity scheduler.
+- Adds Paper/Purpur 26.3 runtime targets and an experimental Folia 26.3 target, with a native production-updater regression fixture, a released-code negative control, and restart/settings checks.
+- Makes releases an explicit manual action after build and runtime checks for the same source commit. Pushes and pull requests validate candidates; existing tags and release assets cannot be overwritten by the release workflow.
+
+This version has not been published. The coordinated Slimefun release and addon ZIP remain on hold. See [native HUD validation](docs/native-hud-validation.md) for the exact evidence and its limits, including the absence of a connected player client in the new native fixture.
 
 ## What changed in 2.0.4
 
@@ -95,7 +105,7 @@ Admin: `/slimehud reload`
 
 The Maven build produces exactly:
 
-`SF_SlimeHUD2.0.4.jar`
+`SF_SlimeHUD2.0.5.jar`
 
 ## Compatibility target
 
@@ -107,3 +117,5 @@ The Maven build produces exactly:
 - Slimefun Legacy
 - Optional What Is That? integration
 - Optional SF_JustEnoughGuide 2.1.65+ native adapter
+
+Folia 26.3 is currently an experimental target because the upstream runtime is ALPHA. Its regression check exercises real region ownership and the installed HUD updater; startup admission alone does not establish every gameplay or addon integration path.

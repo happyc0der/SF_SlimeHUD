@@ -6,9 +6,15 @@ on:
       - master
       - 'feature/**'
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish a new release after all required exact-source candidate checks pass
+        type: boolean
+        required: true
+        default: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -34,9 +40,9 @@ jobs:
             java: 25
             paper: 26.2.build.124-stable
             artifact: false
-          - label: Paper 26.3 current pre-release API
+          - label: Paper 26.3 stable API
             java: 25
-            paper: 26.3.build.32-alpha
+            paper: 26.3.build.203-stable
             artifact: false
 
     steps:
@@ -54,35 +60,77 @@ jobs:
         run: mvn -B -ntp -Dpaper.version="${{ matrix.paper }}" clean package
 
       - name: Verify drop-in filename
-        run: test -s target/SF_SlimeHUD2.0.4.jar
+        run: test -s target/SF_SlimeHUD2.0.5.jar
 
       - name: Upload raw JAR
-        if: matrix.artifact
+        if: matrix.artifact && !(github.event_name == 'workflow_dispatch' && inputs.publish)
         uses: actions/upload-artifact@v7
         with:
-          name: SF_SlimeHUD2.0.4.jar
-          path: target/SF_SlimeHUD2.0.4.jar
+          name: SF_SlimeHUD2.0.5.jar
+          path: target/SF_SlimeHUD2.0.5.jar
           archive: false
           if-no-files-found: error
 
-      - name: Publish canonical GitHub Release JAR
-        if: matrix.artifact && github.ref == 'refs/heads/master'
+  release-runtime-gates:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/master'
+    uses: ./.github/workflows/runtime-compatibility.yml
+
+  publish:
+    name: Publish a new verified version
+    needs: [build, release-runtime-gates]
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: slimehud-release
+      cancel-in-progress: false
+    steps:
+      - name: Checkout the verified source
+        uses: actions/checkout@v6
+
+      - name: Download the exact runtime-tested JAR
+        uses: actions/download-artifact@v8
+        with:
+          name: SF_SlimeHUD2.0.5.jar
+          path: build/verified-release
+
+      - name: Require current master and a new immutable version
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
-          TAG='v2.0.4'
-          JAR='target/SF_SlimeHUD2.0.4.jar'
-          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            while IFS= read -r OLD; do
-              if [[ "$OLD" == *.jar && "$OLD" != 'SF_SlimeHUD2.0.4.jar' ]]; then
-                gh release delete-asset "$TAG" "$OLD" --repo "$GITHUB_REPOSITORY" -y
-              fi
-            done < <(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name')
-            gh release upload "$TAG" "$JAR" --repo "$GITHUB_REPOSITORY" --clobber
-          else
-            gh release create "$TAG" "$JAR" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-              --title 'SF_SlimeHUD 2.0.4' \
-              --notes 'SF_SlimeHUD 2.0.4: runtime reliability hardening, restored generator HUD coverage, addon-handler fallback, optional WIT fail-open recovery, and Slimefun Legacy 4.1.61 validation for Minecraft 1.21.11 through 26.3.'
-          fi
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/master" --jq '.object.sha')" = "$GITHUB_SHA"
+          python3 - <<'PY'
+          import json, os, urllib.error, urllib.request
+          base = 'https://api.github.com/repos/' + os.environ['GITHUB_REPOSITORY']
+          for path in ('/git/ref/tags/v2.0.5', '/releases/tags/v2.0.5'):
+              request = urllib.request.Request(base + path, headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json', 'User-Agent': 'SF_SlimeHUD-release'})
+              try:
+                  with urllib.request.urlopen(request, timeout=30) as response:
+                      json.load(response)
+              except urllib.error.HTTPError as error:
+                  if error.code == 404:
+                      continue
+                  raise
+              raise SystemExit('Refusing to overwrite an existing tag or release: ' + path)
+          PY
+
+      - name: Create the new tag and release without overwriting assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR="$(find build/verified-release -name 'SF_SlimeHUD2.0.5.jar' -print -quit)"
+          test -n "$JAR"
+          test -s "$JAR"
+          # Creating the ref fails if another publisher created the tag after preflight.
+          gh api --method POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref='refs/tags/v2.0.5' -f sha="$GITHUB_SHA" >/dev/null
+          gh release create 'v2.0.5' "$JAR" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title 'SF_SlimeHUD 2.0.5' --notes-file docs/releases/2.0.5.md

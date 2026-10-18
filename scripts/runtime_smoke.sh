@@ -8,14 +8,16 @@ ADDON_JAR="${4:?Usage: runtime_smoke.sh <paper|purpur|leaf|folia> <minecraft-ver
 WORK_DIR="${5:-build/runtime-smoke-${FAMILY}-${MC_VERSION}}"
 EXPECTATION="${6:-supported}"
 
-SLIMEFUN_VERSION="${SLIMEFUN_VERSION:-4.1.61}"
+SLIMEFUN_VERSION="${SLIMEFUN_VERSION:-4.1.75}"
+SLIMEFUN_SHA256="${SLIMEFUN_SHA256:-206cd1e54e81bf7d3968b2b2a4bd698f1271dca9dd474f2aebf4a7a195c1b060}"
+SLIMEFUN_SOURCE="${SLIMEFUN_SOURCE:-7f702e3565a381aeeefd99555f2c8fe818858e9c}"
 SLIMEFUN_URL="${SLIMEFUN_URL:-https://github.com/wickidcow/Slimefun-Legacy/releases/download/v${SLIMEFUN_VERSION}/Slimefun-Legacy${SLIMEFUN_VERSION}.jar}"
-USER_AGENT="${RUNTIME_SMOKE_USER_AGENT:-SF_SlimeHUD-CI/2.0.4 (https://github.com/wickidcow/SF_SlimeHUD)}"
+USER_AGENT="${RUNTIME_SMOKE_USER_AGENT:-SF_SlimeHUD-CI/2.0.5 (https://github.com/wickidcow/SF_SlimeHUD)}"
 STARTUP_TIMEOUT_SECONDS="${RUNTIME_SMOKE_STARTUP_TIMEOUT:-300}"
 SHUTDOWN_TIMEOUT_SECONDS="${RUNTIME_SMOKE_SHUTDOWN_TIMEOUT:-60}"
 WIT_VERSION_ID="${WIT_VERSION_ID:-}"
 
-for command in curl jq java; do
+for command in curl jq java python3 sha256sum; do
     if ! command -v "$command" >/dev/null 2>&1; then
         echo "Required command is unavailable: $command" >&2
         exit 1
@@ -50,7 +52,13 @@ curl --fail-with-body -L -sS -H "User-Agent: ${USER_AGENT}" \
     -o "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
     "$SLIMEFUN_URL"
 test -s "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar"
-cp "$ADDON_JAR" "$WORK_DIR/plugins/SF_SlimeHUD2.0.4.jar"
+printf '%s  %s\n' "$SLIMEFUN_SHA256" "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" | sha256sum --check
+cp "$ADDON_JAR" "$WORK_DIR/plugins/SF_SlimeHUD2.0.5.jar"
+mkdir -p "$WORK_DIR/plugins/Slimefun"
+cat > "$WORK_DIR/plugins/Slimefun/config.yml" <<'SLIMEFUN_CONFIG'
+options:
+  auto-update: false
+SLIMEFUN_CONFIG
 
 if [[ -n "$WIT_VERSION_ID" ]]; then
     WIT_METADATA="$(curl --fail-with-body -sS -H "User-Agent: ${USER_AGENT}" "https://api.modrinth.com/v2/version/${WIT_VERSION_ID}")"
@@ -125,9 +133,21 @@ fi
 curl --fail-with-body -L -sS -H "User-Agent: ${USER_AGENT}" -o "$WORK_DIR/server.jar" "$SERVER_URL"
 test -s "$WORK_DIR/server.jar"
 
+if [[ "$MC_VERSION" == '26.3' && "$FAMILY" != 'leaf' ]]; then
+    # These expectations come from the resolver and pinned release before any native boot.
+    python3 "$(dirname "$0")/folia_raytrace_probe.py" server-receipt \
+        --server "$WORK_DIR/server.jar" --family "$FAMILY" --minecraft "$MC_VERSION" \
+        --build "$SERVER_BUILD" --channel "$SERVER_CHANNEL" \
+        --core "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
+        --core-version "$SLIMEFUN_VERSION" --core-sha256 "$SLIMEFUN_SHA256" --core-source "$SLIMEFUN_SOURCE" \
+        --output "$WORK_DIR/server-receipt.json"
+fi
+
 printf 'eula=true\n' > "$WORK_DIR/eula.txt"
 cat > "$WORK_DIR/server.properties" <<'PROPERTIES'
 online-mode=false
+server-ip=127.0.0.1
+server-port=0
 level-name=slimehud-smoke-world
 max-players=1
 spawn-protection=0
@@ -147,7 +167,7 @@ Channel: ${SERVER_CHANNEL}
 Download: ${SERVER_URL}
 Java: $(java -version 2>&1 | head -n 1)
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-Addon: SF_SlimeHUD 2.0.4
+Addon: SF_SlimeHUD 2.0.5
 What Is That?: ${WIT_VERSION_ID:-not installed}
 Expectation: ${EXPECTATION}
 EOF_BUILD
@@ -248,7 +268,7 @@ Minecraft: ${MC_VERSION}
 Build: ${SERVER_BUILD}
 Channel: ${SERVER_CHANNEL}
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-SF_SlimeHUD: 2.0.4
+SF_SlimeHUD: 2.0.5
 Server reached Done: yes
 Slimefun enabled: no
 SlimeHUD dependency handling: graceful disable observed
@@ -272,8 +292,8 @@ if ! grep -Fq "Enabling Slimefun v${SLIMEFUN_VERSION}" "$CONSOLE_LOG"; then
     cat "$CONSOLE_LOG" >&2 || true
     exit 1
 fi
-if ! grep -Fq 'Enabling SlimeHUD v2.0.4' "$CONSOLE_LOG"; then
-    echo "${FAMILY} ${MC_VERSION}: SlimeHUD 2.0.4 enable line was not observed." >&2
+if ! grep -Fq 'Enabling SlimeHUD v2.0.5' "$CONSOLE_LOG"; then
+    echo "${FAMILY} ${MC_VERSION}: SlimeHUD 2.0.5 enable line was not observed." >&2
     cat "$CONSOLE_LOG" >&2 || true
     exit 1
 fi
@@ -314,7 +334,7 @@ Minecraft: ${MC_VERSION}
 Build: ${SERVER_BUILD}
 Channel: ${SERVER_CHANNEL}
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-SF_SlimeHUD: 2.0.4
+SF_SlimeHUD: 2.0.5
 Server reached Done: yes
 Slimefun enabled: yes
 SlimeHUD enabled: yes

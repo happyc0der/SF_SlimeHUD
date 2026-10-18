@@ -35,12 +35,30 @@ jobs:
       - name: Verify drop-in filename
         run: test -s target/SF_SlimeHUD2.0.5.jar
 
+      - name: Verify native proof rejection controls, including optimized Python
+        run: |
+          python3 -B -m unittest discover -s scripts -p '*_test.py' -v
+          python3 -B -O -m unittest discover -s scripts -p '*_test.py' -v
+
+      - name: Bind the built candidate to this exact source
+        run: |
+          python3 scripts/folia_raytrace_probe.py source-receipt \
+            --addon target/SF_SlimeHUD2.0.5.jar --expected-source "$GITHUB_SHA" \
+            --output target/SF_SlimeHUD2.0.5-source.json
+
       - name: Upload raw runtime candidate
         uses: actions/upload-artifact@v7
         with:
           name: SF_SlimeHUD2.0.5.jar
           path: target/SF_SlimeHUD2.0.5.jar
           archive: false
+          if-no-files-found: error
+
+      - name: Upload candidate source receipt
+        uses: actions/upload-artifact@v7
+        with:
+          name: SF_SlimeHUD2.0.5-source
+          path: target/SF_SlimeHUD2.0.5-source.json
           if-no-files-found: error
 
   wit-integration:
@@ -77,7 +95,6 @@ jobs:
         env:
           WIT_VERSION_ID: 'nhz12jiM'
         run: |
-          chmod +x scripts/runtime_smoke.sh
           bash scripts/runtime_smoke.sh \
             paper \
             26.1.2 \
@@ -245,7 +262,6 @@ jobs:
 
       - name: Boot with Slimefun Legacy on ${{ matrix.label }}
         run: |
-          chmod +x scripts/runtime_smoke.sh
           bash scripts/runtime_smoke.sh \
             "${{ matrix.family }}" \
             "${{ matrix.minecraft }}" \
@@ -253,6 +269,13 @@ jobs:
             "${{ steps.addon.outputs.jar }}" \
             "build/runtime-smoke-${{ matrix.family }}-${{ matrix.minecraft }}" \
             "${{ matrix.expectation }}"
+
+      - name: Download the pre-bound candidate source receipt
+        if: matrix.minecraft == '26.3'
+        uses: actions/download-artifact@v8
+        with:
+          name: SF_SlimeHUD2.0.5-source
+          path: build/runtime-candidate
 
       - name: Verify native HUD targeting and unchanged settings after restart
         if: matrix.minecraft == '26.3'
@@ -266,8 +289,11 @@ jobs:
           if [[ "$FAMILY" == 'folia' ]]; then
             MODE='candidate'
           fi
-          python3 scripts/folia_raytrace_probe.py \
+          python3 scripts/folia_raytrace_probe.py run \
             --server-template "build/runtime-smoke-$FAMILY-26.3" \
+            --server-receipt "build/runtime-smoke-$FAMILY-26.3/server-receipt.json" \
+            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.5-source.json \
+            --expected-source "$GITHUB_SHA" \
             --core "build/runtime-smoke-$FAMILY-26.3/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
             --addon "$ADDON_JAR" --java-home "$JAVA_HOME" \
             --work-dir "build/native-hud-$FAMILY-26.3" --mode "$MODE" --restart
@@ -282,8 +308,11 @@ jobs:
             'https://github.com/wickidcow/SF_SlimeHUD/releases/download/v2.0.4/SF_SlimeHUD2.0.4.jar' \
             --output build/negative-control/SF_SlimeHUD2.0.4.jar
           echo 'a0185cd2a3dddca3cb2a9d0b26a115764cea2a7b723717c4678fa81705c342c9  build/negative-control/SF_SlimeHUD2.0.4.jar' | sha256sum --check
-          python3 scripts/folia_raytrace_probe.py \
+          python3 scripts/folia_raytrace_probe.py run \
             --server-template build/runtime-smoke-folia-26.3 \
+            --server-receipt build/runtime-smoke-folia-26.3/server-receipt.json \
+            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.5-source.json \
+            --expected-source "$GITHUB_SHA" \
             --core "build/runtime-smoke-folia-26.3/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
             --addon build/negative-control/SF_SlimeHUD2.0.4.jar --java-home "$JAVA_HOME" \
             --work-dir build/native-hud-folia-control --mode control
@@ -294,11 +323,16 @@ jobs:
         with:
           name: slimehud-native-${{ matrix.family }}-26.3
           path: |
-            build/native-hud-*/verification.json
+            build/native-hud-*/*.json
+            build/native-hud-*/plugins/SlimeHudRegionProbe/*.json
             build/native-hud-*/*console.log
+            build/native-hud-*/boot-*-server.log
+            build/native-hud-*/logs/latest.log
             build/native-hud-*/compile.log
             build/runtime-smoke-${{ matrix.family }}-26.3/smoke-result.txt
             build/runtime-smoke-${{ matrix.family }}-26.3/server-build.txt
+            build/runtime-smoke-${{ matrix.family }}-26.3/server-receipt.json
+            build/runtime-candidate/SF_SlimeHUD2.0.5-source.json
           if-no-files-found: warn
 
       - name: Publish runtime evidence

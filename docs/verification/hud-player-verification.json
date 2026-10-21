@@ -1,0 +1,616 @@
+{
+  "status": "PASS",
+  "candidate_sha256": "69978c17b646d8a91845e9de0e635bfded3cd6f66697c34fdd251ece4f9ee85e",
+  "baseline_sha256": "43edc50c72a914b9025cf69c5f903b730234380a516fefde3373c99ba9e2742b",
+  "server": "Paper 1.21.11 build132",
+  "server_sha256": "5ffef465eeeb5f2a3c23a24419d97c51afd7dbb4923ff42df9a3f58bba1ccfba",
+  "java": "Temurin 25.0.4.1+1; plugin bytecode Java21",
+  "slimefun": "4.1.76 source e7ba40469eae1aa54b4347af19e58341f492edcb",
+  "slimefun_sha256": "e11d024fa3ed4aca3f891d61af61f2542ec62efeeda7a98646941247331da659",
+  "wit": "1.9.5-mc.1.21.11 Modrinth CWSl11QK; packaged defaults with core.mode=sneaking",
+  "wit_sha256": "d5dbb218c1de733786c35f18e3b43f44295e54bb1ecbd2c2dae40df535d57dfc",
+  "fixture_sha256": "aeb7a302eec29c7b9b173c974008c134d5950b4634397828c6aee98157fdbe15",
+  "candidate_cases": 36,
+  "acceptance_checks": 68,
+  "checks": [
+    "baseline_native connected real protocol client",
+    "baseline_native normal shutdown",
+    "baseline_native no fixture or HUD failures",
+    "baseline_native only identified network errors",
+    "baseline_wit connected real protocol client",
+    "baseline_wit normal shutdown",
+    "baseline_wit no fixture or HUD failures",
+    "baseline_wit only identified network errors",
+    "candidate_native connected real protocol client",
+    "candidate_native normal shutdown",
+    "candidate_native no fixture or HUD failures",
+    "candidate_native only identified network errors",
+    "candidate_wit connected real protocol client",
+    "candidate_wit normal shutdown",
+    "candidate_wit no fixture or HUD failures",
+    "candidate_wit only identified network errors",
+    "candidate_restart connected real protocol client",
+    "candidate_restart normal shutdown",
+    "candidate_restart no fixture or HUD failures",
+    "candidate_restart only identified network errors",
+    "negative control crouching-wheat-young",
+    "negative control crouching-wheat-mature",
+    "negative control crouching-redstone",
+    "negative control crouching-torch",
+    "negative control tick-rate-one",
+    "negative control WIT stale double bar",
+    "negative control WIT invalid type suppresses HUD",
+    "standing-stone",
+    "crouching-stone",
+    "crouching-wheat-young",
+    "crouching-wheat-mature",
+    "crouching-redstone",
+    "crouching-torch",
+    "crouching-electric-furnace",
+    "crouching-solar-generator",
+    "crouching-dropped-diamonds",
+    "tick-rate-one",
+    "tick-rate-two",
+    "tick-rate-five",
+    "native-toggle-on",
+    "actionbar-stone",
+    "saved-actionbar-preference",
+    "actionbar-clear-on-look-away",
+    "native-toggle-off",
+    "wit-standing-native",
+    "wit-crouching-single-bar",
+    "wit-stand-handoff",
+    "wit-invalid-display-fallback",
+    "wit-valid-display-recovery",
+    "wit-electric-furnace",
+    "wit-solar-generator",
+    "wit-crouching-wheat-young",
+    "wit-disabled-native-fallback",
+    "wit-enabled-recovery",
+    "wit-final-stand-handoff",
+    "wit-actionbar-stand-handoff",
+    "wit-bossbar-after-actionbar",
+    "wit-reload-single-display",
+    "wit-actionbar-crouching",
+    "wit-actionbar-resume",
+    "restart-restores-actionbar",
+    "restart-crouching-stone",
+    "restart-clear-on-look-away",
+    "restart preserves preference bytes and mtime",
+    "candidate_native identical candidate JAR",
+    "candidate_wit identical candidate JAR",
+    "candidate_restart identical candidate JAR",
+    "candidate JAR remains unchanged"
+  ],
+  "evidence": {
+    "baseline_native": {
+      "sha256": "398dcba35dd2e45e54256ba15363f58f078cc9190014569512fe3ebbb7cf3e37",
+      "run_relative_path": "baseline-native2/verification.json"
+    },
+    "baseline_wit": {
+      "sha256": "f54b1549c728c72806d9c57fb05ed666829589123bc989f77a3cb845c56ca452",
+      "run_relative_path": "baseline-wit-raw/verification.json"
+    },
+    "candidate_native": {
+      "sha256": "5ddf1f9c64c94af45431e6ccc121b714e085e4ea743b910aed1282f0e0f9fdea",
+      "run_relative_path": "candidate-native/verification.json"
+    },
+    "candidate_wit": {
+      "sha256": "56c7cd88f74cea5e99ccc21f88b3642d61a34a59ed36b4747fba4a94978e4e99",
+      "run_relative_path": "candidate-wit/verification.json"
+    },
+    "candidate_restart": {
+      "sha256": "5a34092c7efc2153a9f1ea747ced1746acadb8ac142263147ed261667c8b30cd",
+      "run_relative_path": "candidate-native/restart-evidence/verification.json"
+    }
+  },
+  "limitations": [
+    "A real offline Java protocol client was connected to a disposable localhost Paper server; no graphical client font/rendering or production AlbionMC server was tested.",
+    "Runtime gameplay-path tests used Paper1.21.11 only; Folia multi-region handoff and native26.3 gameplay remain outside this packet-level run.",
+    "The fixture placed real blocks and registered Slimefun machine identities to exercise production HUD code; it did not simulate every addon handler, machine recipe, or inventory interaction.",
+    "Mojang authlib public-key lookup failed due isolated-environment DNS. Native logs preserve this network error; no SlimeHUD/WIT/fixture runtime failures were found.",
+    "The original test text parser omitted NBT mixed-list literal-string nodes from WIT snapshots; raw packets independently contain correct vanilla suffixes. Fixed candidate decoder handles those nodes."
+  ],
+  "candidate_source": {
+    "base_commit": "9a83f5b85efee68421d49959492477a0d8efd209",
+    "production_diff_sha256": "1f7f1bb42f7c53cb90e531390aae1d6b3fc175408c35fcf25de41318304d3b77",
+    "production_files": {
+      "src/main/java/io/github/schntgaispock/slimehud/waila/PlayerWAILA.java": "0a0f87225b948c6b5e173e5664f9aafad54d346f3db92a6268777ade91fa014a",
+      "src/main/java/io/github/schntgaispock/slimehud/integration/WITIntegration.java": "6c9cb110435ba803cb4243c488c67b5fc024bf7cf1c234615be9eef535ede52f"
+    }
+  },
+  "observed_cases": {
+    "baseline_native": [
+      {
+        "name": "standing-stone",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-stone",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-wheat-young",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-wheat-mature",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-redstone",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-torch",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-electric-furnace",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Electric Furnace | Idle | 0/64 J"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-solar-generator",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Solar Generator | \u2600 2 J/t"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-dropped-diamonds",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Diamond | Stack: 12"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "actionbar-stone",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "actionbar-clear-on-look-away",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-one",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-two",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-five",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "native-toggle-off",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "native-toggle-on",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      }
+    ],
+    "baseline_wit": [
+      {
+        "name": "wit-standing-native",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-crouching-single-bar",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] |"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-stand-handoff",
+        "visible_bossbars": 2,
+        "bossbar_text": [
+          "Stone [\u26cf] |",
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-invalid-display-fallback",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-valid-display-recovery",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] |"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-electric-furnace",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Electric Furnace |Idle | 0/64 J"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-solar-generator",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Solar Generator |\u2600 2 J/t"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-crouching-wheat-young",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Wheat |"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-disabled-native-fallback",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-enabled-recovery",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] |"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-final-stand-handoff",
+        "visible_bossbars": 2,
+        "bossbar_text": [
+          "Stone [\u26cf] |",
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      }
+    ],
+    "candidate_native": [
+      {
+        "name": "standing-stone",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-stone",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-wheat-young",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Wheat | Age: 1/7"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-wheat-mature",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Wheat | Age: 7/7"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-redstone",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Redstone Wire | Power: 0/15"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-torch",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Torch"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-electric-furnace",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Electric Furnace | Idle | 0/64 J"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-solar-generator",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Solar Generator | \u2600 2 J/t"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "crouching-dropped-diamonds",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Diamond | Stack: 12"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "actionbar-stone",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "actionbar-clear-on-look-away",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-one",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-two",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "tick-rate-five",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "native-toggle-off",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      },
+      {
+        "name": "native-toggle-on",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "saved-actionbar-preference",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      }
+    ],
+    "candidate_wit": [
+      {
+        "name": "wit-standing-native",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-crouching-single-bar",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-stand-handoff",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-invalid-display-fallback",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-valid-display-recovery",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-electric-furnace",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Electric Furnace | Idle | 0/64 J"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-solar-generator",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Solar Generator | \u2600 2 J/t"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-crouching-wheat-young",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Wheat | Age: 1/7"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-disabled-native-fallback",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-enabled-recovery",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-final-stand-handoff",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-actionbar-crouching",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "wit-actionbar-stand-handoff",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-actionbar-resume",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "wit-bossbar-after-actionbar",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      },
+      {
+        "name": "wit-reload-single-display",
+        "visible_bossbars": 1,
+        "bossbar_text": [
+          "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+        ],
+        "actionbar": ""
+      }
+    ],
+    "candidate_restart": [
+      {
+        "name": "restart-restores-actionbar",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "restart-crouching-stone",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": "Stone [\u26cf] | Tool: Pickaxe (held \u2717)"
+      },
+      {
+        "name": "restart-clear-on-look-away",
+        "visible_bossbars": 0,
+        "bossbar_text": [],
+        "actionbar": ""
+      }
+    ]
+  },
+  "restart_preferences": {
+    "preferences_before": {
+      "sha256": "bf29e35fc20dcc8510d50a1d4f4f2a39fddc1c858f28868cd8e121643cecf52f",
+      "mtime": 1792598449515.0562
+    },
+    "preferences_after": {
+      "sha256": "bf29e35fc20dcc8510d50a1d4f4f2a39fddc1c858f28868cd8e121643cecf52f",
+      "mtime": 1792598449515.0562
+    },
+    "preferences_unchanged": true
+  },
+  "scope": "Recorded from a real connected protocol client against installed production JARs. Native block, entity and display packets were used; no graphical screen capture or production server access."
+}

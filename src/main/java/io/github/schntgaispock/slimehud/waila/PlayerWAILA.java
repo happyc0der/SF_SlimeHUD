@@ -136,10 +136,10 @@ public final class PlayerWAILA {
             return;
         }
 
-        if (WITIntegration.shouldDelegate(player)) {
+        if (WITIntegration.updateDisplayOwnership(player)) {
             requestSequence.incrementAndGet();
             clearFacing();
-            clearDisplay();
+            clearDisplay(!WITIntegration.isUsingActionBar(player));
             return;
         }
 
@@ -159,7 +159,7 @@ public final class PlayerWAILA {
                 direction,
                 ownedDistance,
                 FluidCollisionMode.NEVER,
-                true,
+                false,
                 HudRayTraceBounds.ENTITY_RAY_SIZE,
                 entity -> showItems && entity instanceof Item);
 
@@ -197,23 +197,26 @@ public final class PlayerWAILA {
     }
 
     private void inspectItem(long sequence, Item droppedItem) {
-        droppedItem.getScheduler().run(
-                SlimeHUD.getInstance(),
-                scheduledTask -> {
-                    try {
-                        ItemStack stack = droppedItem.getItemStack().clone();
-                        ItemInfoProvider.ItemHud itemHud =
-                                ItemInfoProvider.describe(stack, SlimeHUD.getInstance().getConfig());
-                        publishSnapshot(sequence, new HudSnapshot(itemHud.name(), itemHud.info()));
-                    } catch (RuntimeException | LinkageError error) {
-                        recordFailure("dropped-item inspection", error);
-                    }
-                },
-                null);
+        Runnable inspection = () -> {
+            try {
+                ItemStack stack = droppedItem.getItemStack().clone();
+                ItemInfoProvider.ItemHud itemHud =
+                        ItemInfoProvider.describe(stack, SlimeHUD.getInstance().getConfig());
+                publishSnapshot(sequence, new HudSnapshot(itemHud.name(), itemHud.info()));
+            } catch (RuntimeException | LinkageError error) {
+                recordFailure("dropped-item inspection", error);
+                publishSnapshot(sequence, new HudSnapshot("", ""));
+            }
+        };
+        if (Bukkit.isOwnedByCurrentRegion(droppedItem)) {
+            inspection.run();
+        } else {
+            droppedItem.getScheduler().run(SlimeHUD.getInstance(), task -> inspection.run(), null);
+        }
     }
 
     private void inspectBlock(long sequence, Location target, ItemStack heldItem) {
-        Bukkit.getRegionScheduler().execute(SlimeHUD.getInstance(), target, () -> {
+        Runnable inspection = () -> {
             try {
                 Block targetBlock = target.getBlock();
                 if (targetBlock.getType().isAir()) {
@@ -252,15 +255,27 @@ public final class PlayerWAILA {
                 publishSnapshot(sequence, new HudSnapshot("", ""));
             } catch (RuntimeException | LinkageError error) {
                 recordFailure("block inspection", error);
+                publishSnapshot(sequence, new HudSnapshot("", ""));
             }
-        });
+        };
+        if (Bukkit.isOwnedByCurrentRegion(target)) {
+            inspection.run();
+        } else {
+            Bukkit.getRegionScheduler().execute(SlimeHUD.getInstance(), target, inspection);
+        }
     }
 
     private void publishSnapshot(long sequence, HudSnapshot snapshot) {
-        player.getScheduler().run(
-                SlimeHUD.getInstance(),
-                scheduledTask -> applySnapshot(sequence, snapshot),
-                null);
+        // Avoid queueing an already-owned result behind the next HUD scan.
+        // Cross-region results still return through the player's scheduler.
+        if (Bukkit.isOwnedByCurrentRegion(player)) {
+            applySnapshot(sequence, snapshot);
+        } else {
+            player.getScheduler().run(
+                    SlimeHUD.getInstance(),
+                    scheduledTask -> applySnapshot(sequence, snapshot),
+                    null);
+        }
     }
 
     private void applySnapshot(long sequence, HudSnapshot snapshot) {
@@ -319,11 +334,15 @@ public final class PlayerWAILA {
     }
 
     private void clearDisplay() {
+        clearDisplay(true);
+    }
+
+    private void clearDisplay(boolean clearActionBar) {
         bossBar.setVisible(false);
         if (!displayVisible) {
             return;
         }
-        if (player.isOnline()) {
+        if (clearActionBar && displayMode == DisplayMode.ACTIONBAR && player.isOnline()) {
             player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(""));
         }
         displayVisible = false;

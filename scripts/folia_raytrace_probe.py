@@ -134,6 +134,8 @@ def validate_proof(proof: dict, expected: dict, token: str) -> None:
              "installed_addon_sha256": expected["addon_sha256"], "installed_core_sha256": server["core"]["sha256"],
              "slimehud_version": expected["addon_version"], "slimefun_version": server["core"]["version"],
              "minecraft_version": server["minecraft"], "native_entity_owned": True,
+             "player_accessor_native_handle_matches_owner": True,
+             "player_accessor_scheduler_matches_owner": True, "player_accessor_owned": True,
              "crossing_outcome_matches_expectation": True, "local_display_recovers": True}
     for key, value in equal.items():
         require(type(proof.get(key)) is type(value) and proof[key] == value, f"Missing or incorrect proof field: {key}")
@@ -280,6 +282,7 @@ def run(args: argparse.Namespace) -> None:
     classes.mkdir()
     classpath = [str(root / "plugins/Slimefun.jar"), str(root / "plugins/SlimeHUD.jar")]
     classpath += [str(p) for p in sorted((root / "libraries").rglob("*.jar"))]
+    classpath += [str(p) for p in sorted((root / "versions").rglob("*.jar"))]
     with (root / "compile.log").open("w") as log:
         subprocess.run([str(args.java_home.resolve() / "bin/javac"), "--release", "21", "-cp", ":".join(classpath),
                         "-d", str(classes), *map(str, sorted(fixture.glob("*.java")))],

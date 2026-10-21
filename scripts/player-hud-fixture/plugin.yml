@@ -1,0 +1,12 @@
+name: SlimeHudClientProbe
+version: '1.0'
+main: verification.SlimeHudClientProbe
+api-version: '1.21'
+depend: [SlimeHUD]
+commands:
+  hudverify:
+    description: Disposable integration test fixture
+    permission: hudverify.admin
+permissions:
+  hudverify.admin:
+    default: op

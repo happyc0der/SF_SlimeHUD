@@ -4,13 +4,16 @@ A modernized SlimeHUD fork for **Slimefun Legacy** and Minecraft **1.21.11+** on
 
 ## Changes prepared for 2.0.5
 
+- Identifies passable targets such as crops, redstone dust, and torches using their selection outline, and clears an obsolete label if block or dropped-item inspection fails.
+- Runs inspection and display publication immediately when already on the correct region/entity owner, keeping the HUD responsive even at a one-tick update interval while retaining scheduled handoffs when needed.
+- Cleans up the previous WIT display when its sneaking/visibility settings hand control back to the native HUD, validates WIT's selected renderer before delegating, and preserves the shared ActionBar during handoff.
 - Keeps native HUD ray queries inside the current thread's owned chunks on Folia, including the extra area used to find dropped items. Long configured or integration-provided ranges are shortened at ownership boundaries while nearby blocks and items remain visible.
 - Preserves the exact requested range when the entire query is owned, including ordinary Paper/Purpur operation.
 - Clears stale labels when no safe ray or target exists. Block details continue to be read on their owning region and item details on their owning entity scheduler.
 - Adds Paper/Purpur 26.3 runtime targets and an experimental Folia 26.3 target, with a native production-updater regression fixture, a released-code negative control, and restart/settings checks.
 - Makes releases an explicit manual action after build and runtime checks for the same source commit. Pushes and pull requests validate candidates; existing tags and release assets cannot be overwritten by the release workflow.
 
-This version has not been published. The coordinated Slimefun release and addon ZIP remain on hold. See [native HUD validation](docs/native-hud-validation.md) for the exact evidence and its limits, including the absence of a connected player client in the new native fixture.
+This version has not been published. The coordinated Slimefun release and addon ZIP remain on hold. See [crouch/look and WIT verification](docs/hud-player-verification.md) for the connected-client comparison, observed target text, and restart checks. [Native HUD validation](docs/native-hud-validation.md) separately documents the region-ownership fixture and its limits.
 
 ## What changed in 2.0.4
 
@@ -78,6 +81,14 @@ integrations:
 ```
 
 WIT still controls whether block display is enabled and whether a vanilla block is allowed by WIT's block whitelist/blacklist.
+
+### Looking at blocks and crouching
+
+SlimeHUD's native display identifies vanilla blocks, registered Slimefun blocks, and dropped item stacks without requiring WIT. With the HUD enabled, point at the target; crouching also works. Native identification is always active while enabled, so standing up does not hide it. WIT's separate `core.mode: sneaking` setting controls WIT's own display; SlimeHUD resumes its native display when that mode stops WIT from rendering.
+
+The default native display is BossBar, with an eight-block range and a five-tick update interval. Integrations can override player preferences: the current JustEnoughGuide adapter's default range is five blocks. WIT uses its own range and display choice while it owns rendering. Animal and other non-item entity details belong to WIT; the native SlimeHUD entity target is a dropped item.
+
+Use `/slimehud status` to check whether the native controller is running, which target it sees, and whether WIT is active or native fallback is in use. `WIT bridge: not active` is normal when WIT is not installed. `/slimehud toggle` controls the native HUD and SlimeHUD's contribution to WIT; WIT's own enable/display preferences remain separate.
 
 ## Existing 2.0 features
 

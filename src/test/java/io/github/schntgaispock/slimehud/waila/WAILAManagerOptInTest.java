@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import io.github.schntgaispock.slimehud.SlimeHUD;
@@ -55,7 +56,7 @@ class WAILAManagerOptInTest {
         assertFalse(WAILAManager.isEnabledForPlayer(PLAYER_ID));
         WAILAManager.getInstance().refreshPlayer(player);
 
-        verify(preferences).getBoolean(CHOICE, false);
+        verify(preferences, times(2)).getBoolean(CHOICE, false);
         assertNull(WAILAManager.getInstance().getWaila(player));
         verify(player, never()).getScheduler();
     }

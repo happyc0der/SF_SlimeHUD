@@ -84,7 +84,7 @@ def verify_core(path: Path, expected: dict) -> None:
 def source_receipt(args: argparse.Namespace) -> None:
     receipt = {"schema": 1, **source_identity(args.expected_source),
                "addon_sha256": digest(args.addon), "addon_version": plugin_version(args.addon, "SlimeHUD")}
-    require(receipt["addon_version"] == "2.0.6", "Expected the 2.0.6 release candidate")
+    require(receipt["addon_version"] == "2.0.7", "Expected the 2.0.7 release candidate")
     write_json(args.output, receipt)
 
 
@@ -105,7 +105,7 @@ def expectations(args: argparse.Namespace) -> dict:
     require(source.get("schema") == 1 and server.get("schema") == 1, "Unsupported input receipt schema")
     for key, value in source_identity(args.expected_source).items():
         require(source.get(key) == value, f"Candidate build receipt does not match checkout: {key}")
-    require(source.get("addon_version") == "2.0.6", "Wrong candidate version in build receipt")
+    require(source.get("addon_version") == "2.0.7", "Wrong candidate version in build receipt")
     family = server.get("family")
     require(family in ("paper", "purpur", "folia") and server.get("minecraft") == "26.3",
             "This focused native fixture requires Paper/Purpur/Folia 26.3")
@@ -115,7 +115,7 @@ def expectations(args: argparse.Namespace) -> dict:
     require(isinstance(addon_hash, str) and re.fullmatch(r"[0-9a-f]{64}", addon_hash) is not None,
             "Missing expected addon SHA-256")
     require(digest(args.addon) == addon_hash, "Addon JAR differs from the pre-bound build/control hash")
-    addon_version = "2.0.4" if args.mode == "control" else "2.0.6"
+    addon_version = "2.0.4" if args.mode == "control" else "2.0.7"
     require(plugin_version(args.addon, "SlimeHUD") == addon_version, "Wrong addon descriptor version")
     verify_core(args.core, server["core"])
     require(digest(args.server_template / "server.jar") == server.get("server_launcher_sha256"),

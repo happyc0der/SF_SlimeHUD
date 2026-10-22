@@ -4,7 +4,7 @@ Native BossBar/ActionBar information for Minecraft **1.21.11+** on Paper/Purpur/
 
 ## Next maintenance release: 2.0.7 (candidate)
 
-This update corrects the generated first-run settings and clarifies player toggling. The v2.0.6 addon ZIP already includes standalone SlimeHUD and persistent opt-in; the upstream standalone GitHub release still lists v2.0.5. This candidate is not published until fresh verification passes.
+This update corrects the generated first-run settings and clarifies player toggling. The v2.0.6 addon ZIP already includes standalone SlimeHUD and persistent opt-in; the upstream standalone GitHub release still lists v2.0.5. The first-run default change passed the initial build and native runtime matrix. Version 2.0.7 is now the exact candidate for verification and publication.
 
 ```yaml
 waila:

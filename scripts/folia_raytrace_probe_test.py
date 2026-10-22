@@ -16,7 +16,7 @@ SOURCE = "1" * 40
 
 def expected(mode="candidate"):
     return {"mode": mode, "source_commit": SOURCE, "addon_sha256": "2" * 64,
-            "addon_version": "2.0.4" if mode == "control" else "2.0.6",
+            "addon_version": "2.0.4" if mode == "control" else "2.0.7",
             "server": {"family": "paper" if mode == "single-region" else "folia", "minecraft": "26.3",
                        "build": "3", "core": {"version": "4.1.75", "sha256": "3" * 64}}}
 
@@ -165,8 +165,8 @@ class ProofContractTests(unittest.TestCase):
     def test_plugin_disable_runtime_and_missing_shutdown_errors_fail(self):
         console = valid_console()
         mutations = [console.replace("Stopping server", "Forced exit"),
-                     console.replace("Disabling SlimeHUD v2.0.6", ""),
-                     "[12:00:00 INFO]: Disabling SlimeHUD v2.0.6\n" + console,
+                     console.replace("Disabling SlimeHUD v2.0.7", ""),
+                     "[12:00:00 INFO]: Disabling SlimeHUD v2.0.7\n" + console,
                      console + "[12:00:01 ERROR]: Error occurred while disabling SlimeHUD\n",
                      console + "[12:00:01 ERROR]: A runtime error\n",
                      console + "[12:00:01 WARN]: java.lang.IllegalStateException: unexpected callback\n"]
@@ -219,11 +219,11 @@ class ProofContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             addon, core, server = root / "addon.jar", root / "core.jar", root / "server.jar"
-            plugin_jar(addon, "SlimeHUD", "2.0.6")
+            plugin_jar(addon, "SlimeHUD", "2.0.7")
             plugin_jar(core, "Slimefun", "4.1.75")
             server.write_bytes(b"pinned native launcher")
             identity = {"source_commit": SOURCE, "source_tree": "4" * 40, "probe_sources": {"fixture.java": "5" * 64}}
-            source = {"schema": 1, **identity, "addon_version": "2.0.6", "addon_sha256": probe.digest(addon)}
+            source = {"schema": 1, **identity, "addon_version": "2.0.7", "addon_sha256": probe.digest(addon)}
             native = {"schema": 1, "family": "folia", "minecraft": "26.3", "build": "3", "channel": "ALPHA",
                       "server_launcher_sha256": probe.digest(server),
                       "core": {"sha256": probe.digest(core), "source_commit": SOURCE, "version": "4.1.75"}}

@@ -33,7 +33,7 @@ jobs:
         run: mvn -B -ntp clean package
 
       - name: Verify drop-in filename
-        run: test -s target/SF_SlimeHUD2.0.6.jar
+        run: test -s target/SF_SlimeHUD2.0.7.jar
 
       - name: Verify native proof rejection controls, including optimized Python
         run: |
@@ -43,22 +43,22 @@ jobs:
       - name: Bind the built candidate to this exact source
         run: |
           python3 scripts/folia_raytrace_probe.py source-receipt \
-            --addon target/SF_SlimeHUD2.0.6.jar --expected-source "$GITHUB_SHA" \
-            --output target/SF_SlimeHUD2.0.6-source.json
+            --addon target/SF_SlimeHUD2.0.7.jar --expected-source "$GITHUB_SHA" \
+            --output target/SF_SlimeHUD2.0.7-source.json
 
       - name: Upload raw runtime candidate
         uses: actions/upload-artifact@v7
         with:
-          name: SF_SlimeHUD2.0.6.jar
-          path: target/SF_SlimeHUD2.0.6.jar
+          name: SF_SlimeHUD2.0.7.jar
+          path: target/SF_SlimeHUD2.0.7.jar
           archive: false
           if-no-files-found: error
 
       - name: Upload candidate source receipt
         uses: actions/upload-artifact@v7
         with:
-          name: SF_SlimeHUD2.0.6-source
-          path: target/SF_SlimeHUD2.0.6-source.json
+          name: SF_SlimeHUD2.0.7-source
+          path: target/SF_SlimeHUD2.0.7-source.json
           if-no-files-found: error
 
   runtime:
@@ -194,14 +194,14 @@ jobs:
       - name: Download runtime candidate
         uses: actions/download-artifact@v8
         with:
-          name: SF_SlimeHUD2.0.6.jar
+          name: SF_SlimeHUD2.0.7.jar
           path: build/runtime-candidate
 
       - name: Resolve runtime candidate
         id: addon
         shell: bash
         run: |
-          JAR="$(find build/runtime-candidate -name 'SF_SlimeHUD2.0.6.jar' -print -quit)"
+          JAR="$(find build/runtime-candidate -name 'SF_SlimeHUD2.0.7.jar' -print -quit)"
           test -n "$JAR"
           test -s "$JAR"
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
@@ -220,7 +220,7 @@ jobs:
         if: matrix.minecraft == '26.3'
         uses: actions/download-artifact@v8
         with:
-          name: SF_SlimeHUD2.0.6-source
+          name: SF_SlimeHUD2.0.7-source
           path: build/runtime-candidate
 
       - name: Verify native HUD targeting and unchanged settings after restart
@@ -238,7 +238,7 @@ jobs:
           python3 scripts/folia_raytrace_probe.py run \
             --server-template "build/runtime-smoke-$FAMILY-26.3" \
             --server-receipt "build/runtime-smoke-$FAMILY-26.3/server-receipt.json" \
-            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.6-source.json \
+            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.7-source.json \
             --expected-source "$GITHUB_SHA" \
             --core "build/runtime-smoke-$FAMILY-26.3/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
             --addon "$ADDON_JAR" --java-home "$JAVA_HOME" \
@@ -257,7 +257,7 @@ jobs:
           python3 scripts/folia_raytrace_probe.py run \
             --server-template build/runtime-smoke-folia-26.3 \
             --server-receipt build/runtime-smoke-folia-26.3/server-receipt.json \
-            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.6-source.json \
+            --source-receipt build/runtime-candidate/SF_SlimeHUD2.0.7-source.json \
             --expected-source "$GITHUB_SHA" \
             --core "build/runtime-smoke-folia-26.3/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" \
             --addon build/negative-control/SF_SlimeHUD2.0.4.jar --java-home "$JAVA_HOME" \
@@ -278,7 +278,7 @@ jobs:
             build/runtime-smoke-${{ matrix.family }}-26.3/smoke-result.txt
             build/runtime-smoke-${{ matrix.family }}-26.3/server-build.txt
             build/runtime-smoke-${{ matrix.family }}-26.3/server-receipt.json
-            build/runtime-candidate/SF_SlimeHUD2.0.6-source.json
+            build/runtime-candidate/SF_SlimeHUD2.0.7-source.json
           if-no-files-found: warn
 
       - name: Publish runtime evidence

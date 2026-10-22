@@ -1,4 +1,7 @@
-# Format of
-
-# player-uuid:
-#   disabled: bool
+# SlimeHUD per-player preferences (managed automatically).
+# Players with no saved .waila preference start with the HUD off
+# when waila.default-enabled is false in config.yml.
+#
+# 00000000-0000-0000-0000-000000000000:
+#   waila: true
+#   display: bossbar

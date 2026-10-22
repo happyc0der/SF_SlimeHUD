@@ -56,6 +56,16 @@ public final class WAILAManager implements Listener {
         return wailas.get(player.getUniqueId());
     }
 
+    /**
+     * Players must explicitly opt in. Existing choices in player.yml remain
+     * authoritative; a missing key uses the configurable default (off).
+     */
+    public static boolean isEnabledForPlayer(UUID uuid) {
+        SlimeHUD plugin = SlimeHUD.getInstance();
+        return plugin.getPlayerData().getBoolean(
+                uuid + ".waila", plugin.getConfig().getBoolean("waila.default-enabled", false));
+    }
+
     public void refreshPlayer(Player player) {
         if (SlimeHUD.getInstance().getConfig().getBoolean("waila.disabled", false) || isDisabledWorld(player)) {
             PlayerWAILA existing = wailas.get(player.getUniqueId());
@@ -65,14 +75,19 @@ public final class WAILAManager implements Listener {
             return;
         }
 
+        // Do not allocate a BossBar or schedule a repeating task for players
+        // who have not opted in. Opting out stops and removes an existing HUD.
+        if (!isEnabledForPlayer(player.getUniqueId())) {
+            removeWAILA(player);
+            return;
+        }
+
         PlayerWAILA waila = wailas.computeIfAbsent(player.getUniqueId(), ignored -> {
             PlayerWAILA created = new PlayerWAILA(player);
             created.start();
             return created;
         });
-
-        boolean enabled = SlimeHUD.getInstance().getPlayerData().getBoolean(player.getUniqueId() + ".waila", true);
-        waila.setPaused(!enabled);
+        waila.setPaused(false);
 
         String defaultDisplay = SlimeHUD.getInstance().getConfig().getString(
                 "waila.default-display",

@@ -5,6 +5,11 @@ waila:
   # Disable the HUD globally.
   disabled: false
 
+  # Opt-in HUD: a player without a saved preference starts with the HUD off.
+  # /slimehud toggle lets players turn it on or off and persists their choice.
+  # Do NOT set waila.disabled: true here, as it prevents opt-in entirely.
+  default-enabled: false
+
   # Show HUD information only while the player is holding Shift.
   # Defaults to false for existing players and servers.
   crouch-only: false

@@ -4,7 +4,7 @@ Native BossBar/ActionBar information for Minecraft **1.21.11+** on Paper/Purpur/
 
 ## Next maintenance release: 2.0.6 (candidate)
 
-This candidate restores SlimeHUD's standalone native display, removes the WIT bridge and adds optional **crouch-only** mode. Version metadata stays at 2.0.5 until coordinated validation completes.
+This candidate restores SlimeHUD's standalone native display, removes the WIT bridge and adds optional **crouch-only** mode. The initial candidate passed 39 unit tests and all 16 native runtime jobs; 2.0.6 remains unreleased until this exact version also passes its build and runtime gates.
 
 ```yaml
 waila:

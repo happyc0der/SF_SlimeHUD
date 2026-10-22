@@ -30,6 +30,8 @@ def valid_proof(mode="candidate"):
              "player_accessor_native_handle_matches_owner": True,
              "player_accessor_scheduler_matches_owner": True, "player_accessor_owned": True,
              "crossing_outcome_matches_expectation": True, "local_display_recovers": True,
+             "packaged_global_disabled": False, "packaged_default_enabled": mode == "control",
+             "packaged_crouch_only": mode != "control", "fixture_crouch_only_override": False,
              "server_name": value["server"]["family"].title(), "server": "26.3-3-597e413 (MC: 26.3)",
              "java": "25.0.4.1", "owner_thread": "Native owner thread", "fixture": "Synthetic player accessors (schema test)",
              "local_block_rendered": "Stone", "production_updates": {"control": 3, "candidate": 5, "single-region": 7}[mode],
@@ -95,6 +97,8 @@ class ProofContractTests(unittest.TestCase):
                    "slimehud_version": "2.0.4", "native_entity_owned": False, "unowned_target_confirmed_before_query": False,
                    "player_accessor_native_handle_matches_owner": False,
                    "player_accessor_scheduler_matches_owner": False, "player_accessor_owned": False,
+                   "packaged_global_disabled": True, "packaged_default_enabled": True,
+                   "packaged_crouch_only": False, "fixture_crouch_only_override": True,
                    "owned_update_checks": 4, "production_updates": 4, "last_failure_after_recovery": 1,
                    "production_updater_failure": "unexpected", "empty_long_ray_cleared": False, "configured_range": 8}
         for key, value in changes.items():

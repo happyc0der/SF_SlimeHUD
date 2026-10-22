@@ -137,6 +137,12 @@ def validate_proof(proof: dict, expected: dict, token: str) -> None:
              "player_accessor_native_handle_matches_owner": True,
              "player_accessor_scheduler_matches_owner": True, "player_accessor_owned": True,
              "crossing_outcome_matches_expectation": True, "local_display_recovers": True}
+    # Distinguish the published 2.0.4 negative control from the current
+    # native candidate, without treating a synthetic player as crouching.
+    equal.update({"packaged_global_disabled": False,
+                  "packaged_default_enabled": mode == "control",
+                  "packaged_crouch_only": mode != "control",
+                  "fixture_crouch_only_override": False})
     for key, value in equal.items():
         require(type(proof.get(key)) is type(value) and proof[key] == value, f"Missing or incorrect proof field: {key}")
     require(proof.get("server_name", "").lower() == server["family"], "Observed software differs from expected platform")

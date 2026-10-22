@@ -45,6 +45,8 @@ class PlayerWailaFailureTest {
     private final AtomicBoolean visible = new AtomicBoolean(true);
     private final AtomicBoolean sneaking = new AtomicBoolean(false);
     private final AtomicInteger actionBarClears = new AtomicInteger();
+    private final YamlConfiguration config = new YamlConfiguration();
+    private MockedStatic<SlimeHUD> pluginAccess;
 
     @BeforeEach
     void prepareProductionControllerWithImmediateSchedulers() throws Exception {
@@ -104,10 +106,20 @@ class PlayerWailaFailureTest {
         setField(PlayerWAILA.class, hud, "facingBlockInfo", "Previous details");
         // Avoid needing a live plugin logger; recordFailure still records the error.
         setField(PlayerWAILA.class, hud, "lastFailureLogEpochMillis", System.currentTimeMillis());
+
+        // The native HUD checks the plugin config even when a failed lookup
+        // returns an empty snapshot. All tests need a valid plugin/config.
+        SlimeHUD plugin = mock(SlimeHUD.class);
+        when(plugin.getConfig()).thenReturn(config);
+        pluginAccess = mockStatic(SlimeHUD.class);
+        pluginAccess.when(SlimeHUD::getInstance).thenReturn(plugin);
     }
 
     @AfterEach
     void restoreServer() throws Exception {
+        if (pluginAccess != null) {
+            pluginAccess.close();
+        }
         setField(Bukkit.class, null, "server", previousServer);
     }
 
@@ -155,51 +167,37 @@ class PlayerWailaFailureTest {
 
     @Test
     void crouchOnlyHidesExistingDisplayOnStandingUpdate() {
-        try (MockedStatic<SlimeHUD> ignored = pluginWithCrouchOnly(true)) {
-            hud.run();
-            assertEmptyDisplay();
-        }
+        config.set("waila.crouch-only", true);
+        hud.run();
+        assertEmptyDisplay();
     }
 
     @Test
     void releasingShiftClearsDisplayImmediatelyWithoutWaitingForTick() {
-        try (MockedStatic<SlimeHUD> ignored = pluginWithCrouchOnly(true)) {
-            hud.onSneakChanged(false);
-            assertEmptyDisplay();
-        }
+        config.set("waila.crouch-only", true);
+        hud.onSneakChanged(false);
+        assertEmptyDisplay();
     }
 
     @Test
     void normalModeDoesNotHideHudOnShiftRelease() {
-        try (MockedStatic<SlimeHUD> ignored = pluginWithCrouchOnly(false)) {
-            hud.onSneakChanged(false);
-            assertEquals("Previous block", hud.getFacingBlock());
-            assertTrue(visible.get());
-        }
+        config.set("waila.crouch-only", false);
+        hud.onSneakChanged(false);
+        assertEquals("Previous block", hud.getFacingBlock());
+        assertTrue(visible.get());
     }
 
     @Test
     void delayedInspectionCannotRenderAfterShiftRelease() throws Exception {
-        try (MockedStatic<SlimeHUD> ignored = pluginWithCrouchOnly(true)) {
-            Class<?> snapshotClass = Class.forName(PlayerWAILA.class.getName() + "$HudSnapshot");
-            var constructor = snapshotClass.getDeclaredConstructor(String.class, String.class);
-            constructor.setAccessible(true);
-            Object snapshot = constructor.newInstance("New block", "Energy: 42");
-            Method apply = PlayerWAILA.class.getDeclaredMethod("applySnapshot", long.class, snapshotClass);
-            apply.setAccessible(true);
-            apply.invoke(hud, 7L, snapshot);
-            assertEmptyDisplay();
-        }
-    }
-
-    private MockedStatic<SlimeHUD> pluginWithCrouchOnly(boolean enabled) {
-        SlimeHUD plugin = mock(SlimeHUD.class);
-        YamlConfiguration config = new YamlConfiguration();
-        config.set("waila.crouch-only", enabled);
-        when(plugin.getConfig()).thenReturn(config);
-        MockedStatic<SlimeHUD> access = mockStatic(SlimeHUD.class);
-        access.when(SlimeHUD::getInstance).thenReturn(plugin);
-        return access;
+        config.set("waila.crouch-only", true);
+        Class<?> snapshotClass = Class.forName(PlayerWAILA.class.getName() + "$HudSnapshot");
+        var constructor = snapshotClass.getDeclaredConstructor(String.class, String.class);
+        constructor.setAccessible(true);
+        Object snapshot = constructor.newInstance("New block", "Energy: 42");
+        Method apply = PlayerWAILA.class.getDeclaredMethod("applySnapshot", long.class, snapshotClass);
+        apply.setAccessible(true);
+        apply.invoke(hud, 7L, snapshot);
+        assertEmptyDisplay();
     }
 
     private void inspectFailingBlock(long sequence) throws Exception {

@@ -74,6 +74,7 @@ class PlayerDataStoreTest {
         data.set(FIRST + ".display", "actionbar");
         data.set(FIRST + ".waila", false);
         data.set(SECOND + ".waila", true);
+        assertTrue(data.hasPreference(FIRST + ".waila"));
         data.save();
         data.set(FIRST + ".display", null);
         data.save();
@@ -109,6 +110,7 @@ class PlayerDataStoreTest {
     @Test
     void freshStoreRetainsExistingDefaultsAndCreatesAnEmptyFileOnSave() throws Exception {
         var data = open();
+        assertFalse(data.hasPreference(FIRST + ".waila"));
         assertTrue(data.getBoolean(FIRST + ".waila", true));
         assertEquals("bossbar", data.getString(FIRST + ".display", "bossbar"));
         assertFalse(Files.exists(file()));

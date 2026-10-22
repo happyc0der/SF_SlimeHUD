@@ -10,9 +10,9 @@ waila:
   # Do NOT set waila.disabled: true here, as it prevents opt-in entirely.
   default-enabled: false
 
-  # Show HUD information only while the player is holding Shift.
-  # Defaults to false for existing players and servers.
-  crouch-only: false
+  # Only show information while a player holds Shift.
+  # This affects display visibility, not their saved on/off preference.
+  crouch-only: true
 
   # Worlds where the HUD is disabled.
   disabled-in: []

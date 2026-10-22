@@ -1,7 +1,6 @@
 package io.github.schntgaispock.slimehud.waila;
 
 import io.github.schntgaispock.slimehud.SlimeHUD;
-import io.github.schntgaispock.slimehud.integration.WITIntegration;
 import io.github.schntgaispock.slimehud.util.Util;
 import io.github.thebusybiscuit.slimefun4.api.items.SlimefunItem;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -136,10 +135,10 @@ public final class PlayerWAILA {
             return;
         }
 
-        if (WITIntegration.updateDisplayOwnership(player)) {
+        if (isCrouchOnly() && !player.isSneaking()) {
             requestSequence.incrementAndGet();
             clearFacing();
-            clearDisplay(!WITIntegration.isUsingActionBar(player));
+            clearDisplay();
             return;
         }
 
@@ -181,6 +180,32 @@ public final class PlayerWAILA {
 
         ItemStack heldItem = player.getInventory().getItemInMainHand().clone();
         inspectBlock(sequence, hitBlock.getLocation(), heldItem);
+    }
+
+    private boolean isCrouchOnly() {
+        return SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", false);
+    }
+
+    /**
+     * The sneak event fires before the player's state changes. Hide immediately
+     * on releasing Shift and start a new scan on the player owner one tick after
+     * crouching, when the new state is available.
+     */
+    public void onSneakChanged(boolean sneaking) {
+        if (!isCrouchOnly() || paused) {
+            return;
+        }
+        requestSequence.incrementAndGet();
+        if (!sneaking) {
+            clearFacing();
+            clearDisplay();
+        } else {
+            player.getScheduler().runDelayed(
+                    SlimeHUD.getInstance(),
+                    task -> runUpdateSafely(),
+                    null,
+                    1L);
+        }
     }
 
     private int getEffectiveMaxDistance() {
@@ -280,6 +305,13 @@ public final class PlayerWAILA {
 
     private void applySnapshot(long sequence, HudSnapshot snapshot) {
         if (sequence != requestSequence.get() || paused || !player.isOnline()) {
+            return;
+        }
+        // Delayed region/item results must not restore an old HUD after standing.
+        if (isCrouchOnly() && !player.isSneaking()) {
+            requestSequence.incrementAndGet();
+            clearFacing();
+            clearDisplay();
             return;
         }
 
@@ -390,7 +422,7 @@ public final class PlayerWAILA {
     public PlayerWAILA setVisible(boolean visible) {
         if (!visible) {
             clearDisplay();
-        } else if (!paused && !facing.isEmpty()) {
+        } else if (!paused && !facing.isEmpty() && (!isCrouchOnly() || player.isSneaking())) {
             renderCurrent();
         }
         return this;

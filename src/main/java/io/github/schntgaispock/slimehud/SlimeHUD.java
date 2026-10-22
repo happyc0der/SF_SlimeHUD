@@ -1,7 +1,6 @@
 package io.github.schntgaispock.slimehud;
 
 import io.github.schntgaispock.slimehud.command.CommandManager;
-import io.github.schntgaispock.slimehud.integration.WITIntegration;
 import io.github.schntgaispock.slimehud.placeholder.PlaceholderManager;
 import io.github.schntgaispock.slimehud.translation.TranslationManager;
 import io.github.schntgaispock.slimehud.util.PlayerDataStore;
@@ -45,7 +44,6 @@ public final class SlimeHUD extends JavaPlugin {
         translationManager = new TranslationManager();
         hudController = new HudController();
 
-        WITIntegration.setup();
         WAILAManager.setup();
         CommandManager.setup();
         PlaceholderManager.setup();
@@ -56,7 +54,6 @@ public final class SlimeHUD extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        WITIntegration.shutdown();
         WAILAManager.shutdown();
         if (playerData != null) {
             playerData.save();

@@ -1,7 +1,6 @@
 package io.github.schntgaispock.slimehud.command;
 
 import io.github.schntgaispock.slimehud.SlimeHUD;
-import io.github.schntgaispock.slimehud.integration.WITIntegration;
 import io.github.schntgaispock.slimehud.waila.DisplayMode;
 import io.github.schntgaispock.slimehud.waila.PlayerWAILA;
 import io.github.schntgaispock.slimehud.waila.WAILAManager;
@@ -21,7 +20,6 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
                 return true;
             }
             SlimeHUD.getInstance().reloadConfig();
-            WITIntegration.refresh();
             WAILAManager.getInstance().reloadAll();
             sender.sendMessage("§a§lSlimeHUD§7> §aConfiguration reloaded.");
             return true;
@@ -105,9 +103,6 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
 
         String pretty = mode == DisplayMode.BOSSBAR ? "BossBar" : "ActionBar";
         player.sendMessage("§a§lSlimeHUD§7> Display set to §f" + pretty + "§7.");
-        if (WITIntegration.shouldDelegate(player)) {
-            player.sendMessage("§a§lSlimeHUD§7> §7WIT currently owns the visible HUD; use WIT's display setting while its bridge is active.");
-        }
         return true;
     }
 
@@ -124,7 +119,11 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
                 + "§7, display: §f" + mode.id() + "§7.");
         PlayerWAILA waila = WAILAManager.getInstance().getWaila(player);
         if (waila == null) {
-            player.sendMessage("§a§lSlimeHUD§7> Controller: §cmissing§7. Use §f/slimehud reload§7 to rebuild it.");
+            if (SlimeHUD.getInstance().getConfig().getBoolean("waila.disabled", false)) {
+                player.sendMessage("§a§lSlimeHUD§7> Controller: §edisabled globally§7. Set §fwaila.disabled: false§7.");
+            } else {
+                player.sendMessage("§a§lSlimeHUD§7> Controller: §cmissing§7. Use §f/slimehud reload§7 to rebuild it.");
+            }
         } else {
             player.sendMessage("§a§lSlimeHUD§7> Controller: "
                     + (waila.isTaskRunning() ? "§arunning" : "§cstopped")
@@ -135,10 +134,9 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
             }
         }
 
-        player.sendMessage("§a§lSlimeHUD§7> WIT bridge: "
-                + (WITIntegration.hasBridgeFailure(player) ? "§efallback §7(native HUD active after a bridge error)" :
-                WITIntegration.shouldDelegate(player) ? "§aactive §7(WIT owns display)" :
-                WITIntegration.isHooked() ? "§eavailable §7(SlimeHUD currently owns display)" : "§8not active"));
+        player.sendMessage("§a§lSlimeHUD§7> Visibility: §f"
+                + (SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", false)
+                        ? "crouch-only" : "always-on") + "§7.");
         return true;
     }
 
@@ -150,7 +148,7 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
                 "§f/slimehud toggle §7- enable/disable your HUD",
                 "§f/slimehud display bossbar §7- use BossBar",
                 "§f/slimehud display actionbar §7- use ActionBar",
-                "§f/slimehud status §7- show HUD and WIT bridge status",
+                "§f/slimehud status §7- show native HUD and controller status",
                 "");
     }
 }

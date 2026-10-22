@@ -6,7 +6,7 @@ folia-supported: true
 authors:
   - SchnTgaiSpock
   - wickidcow
-description: Slimefun Legacy + vanilla WAILA HUD with optional What Is That integration.
+description: Native Slimefun Legacy + vanilla block HUD with optional crouch-only display.
 website: https://github.com/wickidcow/SF_SlimeHUD
 
 depend:
@@ -14,7 +14,6 @@ depend:
 
 softdepend:
   - PlaceholderAPI
-  - WIT
 
 commands:
   slimehud:

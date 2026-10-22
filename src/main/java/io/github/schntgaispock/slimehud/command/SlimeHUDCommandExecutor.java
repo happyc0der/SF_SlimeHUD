@@ -59,7 +59,7 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
         }
 
         UUID uuid = player.getUniqueId();
-        boolean enabled = SlimeHUD.getInstance().getPlayerData().getBoolean(uuid + ".waila", true);
+        boolean enabled = WAILAManager.isEnabledForPlayer(uuid);
         SlimeHUD.getInstance().getPlayerData().set(uuid + ".waila", !enabled);
         SlimeHUD.getInstance().getPlayerData().save();
         WAILAManager.getInstance().refreshPlayer(player);
@@ -107,7 +107,7 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
     }
 
     private boolean status(Player player) {
-        boolean enabled = SlimeHUD.getInstance().getPlayerData().getBoolean(player.getUniqueId() + ".waila", true);
+        boolean enabled = WAILAManager.isEnabledForPlayer(player.getUniqueId());
         String defaultDisplay = SlimeHUD.getInstance().getConfig().getString(
                 "waila.default-display",
                 SlimeHUD.getInstance().getConfig().getString("waila.location", "bossbar"));
@@ -121,6 +121,8 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
         if (waila == null) {
             if (SlimeHUD.getInstance().getConfig().getBoolean("waila.disabled", false)) {
                 player.sendMessage("§a§lSlimeHUD§7> Controller: §edisabled globally§7. Set §fwaila.disabled: false§7.");
+            } else if (!enabled) {
+                player.sendMessage("§a§lSlimeHUD§7> Controller: §8off by player choice§7. Use §f/slimehud toggle§7 to enable.");
             } else {
                 player.sendMessage("§a§lSlimeHUD§7> Controller: §cmissing§7. Use §f/slimehud reload§7 to rebuild it.");
             }

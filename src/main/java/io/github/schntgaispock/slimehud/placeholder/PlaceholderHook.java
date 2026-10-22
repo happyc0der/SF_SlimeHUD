@@ -36,9 +36,7 @@ public final class PlaceholderHook extends PlaceholderExpansion {
         }
 
         if (params.equalsIgnoreCase("toggle")) {
-            return Boolean.toString(SlimeHUD.getInstance()
-                    .getPlayerData()
-                    .getBoolean(player.getUniqueId() + ".waila", true));
+            return Boolean.toString(WAILAManager.isEnabledForPlayer(player.getUniqueId()));
         }
 
         if (params.equalsIgnoreCase("display")) {

@@ -9,6 +9,7 @@ This candidate restores SlimeHUD's standalone native display, removes the WIT br
 ```yaml
 waila:
   disabled: false
+  default-enabled: false # New players start with their HUD off
   crouch-only: true # Optional; defaults to false
   default-display: bossbar
   tick-rate: 5
@@ -16,7 +17,9 @@ waila:
 
 Holding Shift displays the block, machine or dropped item you look at. Releasing Shift hides the native HUD immediately and invalidates pending region/item lookups. A fresh inspection runs on the player's scheduler after crouching. With `crouch-only: false` (default), the native HUD remains always-on.
 
-Per-player `/slimehud toggle`, saved `player.yml` preferences, global/world disable settings, and BossBar/ActionBar selection are preserved.
+Players without a saved HUD choice start **opted out**. Use `/slimehud toggle` to opt in (and again to turn it back off); the choice persists in `player.yml` across restarts. Players with an explicitly saved `waila: true` stay opted in. Opted-out players do not allocate native HUD controllers or repeating display tasks.
+
+Per-player `/slimehud toggle`, saved `player.yml` preferences, global/world disable settings, and BossBar/ActionBar selection remain supported. To permit players to opt in, keep `waila.disabled: false` even when `waila.default-enabled: false`.
 
 ## Native functionality
 

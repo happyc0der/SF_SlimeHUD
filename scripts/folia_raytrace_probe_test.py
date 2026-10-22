@@ -16,7 +16,7 @@ SOURCE = "1" * 40
 
 def expected(mode="candidate"):
     return {"mode": mode, "source_commit": SOURCE, "addon_sha256": "2" * 64,
-            "addon_version": "2.0.4" if mode == "control" else "2.0.6",
+            "addon_version": "2.0.4" if mode == "control" else "2.0.7",
             "server": {"family": "paper" if mode == "single-region" else "folia", "minecraft": "26.3",
                        "build": "3", "core": {"version": "4.1.75", "sha256": "3" * 64}}}
 
@@ -30,6 +30,8 @@ def valid_proof(mode="candidate"):
              "player_accessor_native_handle_matches_owner": True,
              "player_accessor_scheduler_matches_owner": True, "player_accessor_owned": True,
              "crossing_outcome_matches_expectation": True, "local_display_recovers": True,
+             "packaged_global_disabled": False, "packaged_default_enabled": mode == "control",
+             "packaged_crouch_only": mode != "control", "fixture_crouch_only_override": False,
              "server_name": value["server"]["family"].title(), "server": "26.3-3-597e413 (MC: 26.3)",
              "java": "25.0.4.1", "owner_thread": "Native owner thread", "fixture": "Synthetic player accessors (schema test)",
              "local_block_rendered": "Stone", "production_updates": {"control": 3, "candidate": 5, "single-region": 7}[mode],
@@ -95,6 +97,8 @@ class ProofContractTests(unittest.TestCase):
                    "slimehud_version": "2.0.4", "native_entity_owned": False, "unowned_target_confirmed_before_query": False,
                    "player_accessor_native_handle_matches_owner": False,
                    "player_accessor_scheduler_matches_owner": False, "player_accessor_owned": False,
+                   "packaged_global_disabled": True, "packaged_default_enabled": True,
+                   "packaged_crouch_only": False, "fixture_crouch_only_override": True,
                    "owned_update_checks": 4, "production_updates": 4, "last_failure_after_recovery": 1,
                    "production_updater_failure": "unexpected", "empty_long_ray_cleared": False, "configured_range": 8}
         for key, value in changes.items():
@@ -161,8 +165,8 @@ class ProofContractTests(unittest.TestCase):
     def test_plugin_disable_runtime_and_missing_shutdown_errors_fail(self):
         console = valid_console()
         mutations = [console.replace("Stopping server", "Forced exit"),
-                     console.replace("Disabling SlimeHUD v2.0.6", ""),
-                     "[12:00:00 INFO]: Disabling SlimeHUD v2.0.6\n" + console,
+                     console.replace("Disabling SlimeHUD v2.0.7", ""),
+                     "[12:00:00 INFO]: Disabling SlimeHUD v2.0.7\n" + console,
                      console + "[12:00:01 ERROR]: Error occurred while disabling SlimeHUD\n",
                      console + "[12:00:01 ERROR]: A runtime error\n",
                      console + "[12:00:01 WARN]: java.lang.IllegalStateException: unexpected callback\n"]
@@ -215,11 +219,11 @@ class ProofContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             addon, core, server = root / "addon.jar", root / "core.jar", root / "server.jar"
-            plugin_jar(addon, "SlimeHUD", "2.0.6")
+            plugin_jar(addon, "SlimeHUD", "2.0.7")
             plugin_jar(core, "Slimefun", "4.1.75")
             server.write_bytes(b"pinned native launcher")
             identity = {"source_commit": SOURCE, "source_tree": "4" * 40, "probe_sources": {"fixture.java": "5" * 64}}
-            source = {"schema": 1, **identity, "addon_version": "2.0.6", "addon_sha256": probe.digest(addon)}
+            source = {"schema": 1, **identity, "addon_version": "2.0.7", "addon_sha256": probe.digest(addon)}
             native = {"schema": 1, "family": "folia", "minecraft": "26.3", "build": "3", "channel": "ALPHA",
                       "server_launcher_sha256": probe.digest(server),
                       "core": {"sha256": probe.digest(core), "source_commit": SOURCE, "version": "4.1.75"}}

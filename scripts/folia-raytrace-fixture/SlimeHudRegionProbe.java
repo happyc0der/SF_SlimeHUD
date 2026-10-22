@@ -116,6 +116,18 @@ public final class SlimeHudRegionProbe extends JavaPlugin {
         proof.put("java", System.getProperty("java.version"));
         proof.put("slimehud_version", Bukkit.getPluginManager().getPlugin("SlimeHUD").getPluginMeta().getVersion());
         proof.put("slimefun_version", Bukkit.getPluginManager().getPlugin("Slimefun").getPluginMeta().getVersion());
+        // The native region/target fixture uses a synthetic CraftPlayer backed by
+        // a real pig. It cannot answer a real player's isSneaking() accessor.
+        // Record actual packaged defaults before bypassing crouch gating ONLY
+        // for the synthetic ray/region-ownership test. Never save this override.
+        org.bukkit.plugin.Plugin installedHud = Bukkit.getPluginManager().getPlugin("SlimeHUD");
+        require(installedHud instanceof JavaPlugin, "SlimeHUD plugin is not available");
+        JavaPlugin hudPlugin = (JavaPlugin) installedHud;
+        proof.put("packaged_global_disabled", hudPlugin.getConfig().getBoolean("waila.disabled", true));
+        proof.put("packaged_default_enabled", hudPlugin.getConfig().getBoolean("waila.default-enabled", true));
+        proof.put("packaged_crouch_only", hudPlugin.getConfig().getBoolean("waila.crouch-only", false));
+        hudPlugin.getConfig().set("waila.crouch-only", false);
+        proof.put("fixture_crouch_only_override", false);
         World world = Bukkit.getWorlds().getFirst();
         world.getChunkAtAsync(0, 0).whenComplete((chunk, error) -> {
             if (error != null) {

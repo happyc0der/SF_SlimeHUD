@@ -42,6 +42,11 @@ public final class PlayerDataStore {
         return config.getString(path, def);
     }
 
+    /** Distinguish a saved choice from the server's default without modifying player.yml. */
+    public synchronized boolean hasPreference(String path) {
+        return config.isSet(path);
+    }
+
     public synchronized void set(String path, Object value) {
         if (!Objects.equals(config.get(path), value)) {
             config.set(path, value);

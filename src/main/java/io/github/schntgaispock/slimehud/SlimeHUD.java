@@ -31,6 +31,14 @@ public final class SlimeHUD extends JavaPlugin {
         }
 
         saveDefaultConfig();
+        getLogger().info("Loaded HUD settings from " + getDataFolder().toPath().resolve("config.yml").toAbsolutePath()
+                + ": globalDisabled=" + getConfig().getBoolean("waila.disabled", false)
+                + ", playerDefaultEnabled=" + getConfig().getBoolean("waila.default-enabled", false)
+                + ", crouchOnly=" + getConfig().getBoolean("waila.crouch-only", true) + ".");
+        if (getConfig().getBoolean("waila.disabled", false)) {
+            getLogger().warning("waila.disabled: true blocks every player's /slimehud toggle. "
+                    + "Use waila.disabled: false and waila.default-enabled: false for player opt-in.");
+        }
 
         playerData = null;
         try {

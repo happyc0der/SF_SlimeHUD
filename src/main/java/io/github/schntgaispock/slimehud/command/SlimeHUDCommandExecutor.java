@@ -54,7 +54,8 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
             return true;
         }
         if (SlimeHUD.getInstance().getConfig().getBoolean("waila.disabled", false)) {
-            player.sendMessage("§a§lSlimeHUD§7> §cThe HUD is disabled globally.");
+            player.sendMessage("§a§lSlimeHUD§7> §cCannot toggle: config.yml has waila.disabled: true. "
+                    + "§7Set it to §ffalse§7, then run §f/slimehud reload§7.");
             return true;
         }
 
@@ -108,6 +109,13 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
 
     private boolean status(Player player) {
         boolean enabled = WAILAManager.isEnabledForPlayer(player.getUniqueId());
+        boolean savedChoice = SlimeHUD.getInstance().getPlayerData()
+                .hasPreference(player.getUniqueId() + ".waila");
+        player.sendMessage("§a§lSlimeHUD§7> Version: §f" + SlimeHUD.getInstance().getPluginVersion()
+                + "§7; global disabled: §f"
+                + SlimeHUD.getInstance().getConfig().getBoolean("waila.disabled", false)
+                + "§7; default enabled: §f"
+                + SlimeHUD.getInstance().getConfig().getBoolean("waila.default-enabled", false) + "§7.");
         String defaultDisplay = SlimeHUD.getInstance().getConfig().getString(
                 "waila.default-display",
                 SlimeHUD.getInstance().getConfig().getString("waila.location", "bossbar"));
@@ -115,7 +123,8 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
                 SlimeHUD.getInstance().getPlayerData().getString(player.getUniqueId() + ".display", defaultDisplay),
                 DisplayMode.BOSSBAR);
 
-        player.sendMessage("§a§lSlimeHUD§7> HUD: " + (enabled ? "§aenabled" : "§cdisabled")
+        player.sendMessage("§a§lSlimeHUD§7> Player HUD preference: " + (enabled ? "§aenabled" : "§cdisabled")
+                + (savedChoice ? " §7(saved)" : " §7(server default)")
                 + "§7, display: §f" + mode.id() + "§7.");
         PlayerWAILA waila = WAILAManager.getInstance().getWaila(player);
         if (waila == null) {
@@ -137,7 +146,7 @@ public final class SlimeHUDCommandExecutor implements CommandExecutor {
         }
 
         player.sendMessage("§a§lSlimeHUD§7> Visibility: §f"
-                + (SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", false)
+                + (SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", true)
                         ? "crouch-only" : "always-on") + "§7.");
         return true;
     }

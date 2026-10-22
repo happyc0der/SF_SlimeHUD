@@ -183,7 +183,7 @@ public final class PlayerWAILA {
     }
 
     private boolean isCrouchOnly() {
-        return SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", false);
+        return SlimeHUD.getInstance().getConfig().getBoolean("waila.crouch-only", true);
     }
 
     /**

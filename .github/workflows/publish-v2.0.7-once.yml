@@ -29,6 +29,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v6
+        with:
+          # Release provenance compares the current source to the previously
+          # verified base commit. The default depth=1 omits that commit.
+          fetch-depth: 0
 
       - name: Require exact reviewed change on current master
         env:

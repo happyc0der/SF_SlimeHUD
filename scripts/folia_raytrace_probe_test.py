@@ -27,6 +27,8 @@ def valid_proof(mode="candidate"):
              "connected_player": False, "installed_addon_sha256": value["addon_sha256"],
              "installed_core_sha256": value["server"]["core"]["sha256"], "slimehud_version": value["addon_version"],
              "slimefun_version": "4.1.75", "minecraft_version": "26.3", "native_entity_owned": True,
+             "player_accessor_native_handle_matches_owner": True,
+             "player_accessor_scheduler_matches_owner": True, "player_accessor_owned": True,
              "crossing_outcome_matches_expectation": True, "local_display_recovers": True,
              "server_name": value["server"]["family"].title(), "server": "26.3-3-597e413 (MC: 26.3)",
              "java": "25.0.4.1", "owner_thread": "Native owner thread", "fixture": "Synthetic player accessors (schema test)",
@@ -91,6 +93,8 @@ class ProofContractTests(unittest.TestCase):
                    "installed_addon_sha256": "f" * 64, "installed_core_sha256": "f" * 64,
                    "server_name": "Purpur", "server": "26.3-4-597e413 (MC: 26.3)", "minecraft_version": "26.2",
                    "slimehud_version": "2.0.4", "native_entity_owned": False, "unowned_target_confirmed_before_query": False,
+                   "player_accessor_native_handle_matches_owner": False,
+                   "player_accessor_scheduler_matches_owner": False, "player_accessor_owned": False,
                    "owned_update_checks": 4, "production_updates": 4, "last_failure_after_recovery": 1,
                    "production_updater_failure": "unexpected", "empty_long_ray_cleared": False, "configured_range": 8}
         for key, value in changes.items():

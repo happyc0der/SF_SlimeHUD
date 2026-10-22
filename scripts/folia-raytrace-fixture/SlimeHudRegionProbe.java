@@ -26,6 +26,8 @@ import org.bukkit.World;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.craftbukkit.entity.CraftEntity;
+import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Pig;
 import org.bukkit.entity.Player;
@@ -37,7 +39,8 @@ import sun.misc.Unsafe;
 
 /**
  * Test-only production-updater probe. The accessor fixture is not a connected player:
- * it delegates location and scheduling to an actual Folia-owned pig, while native
+ * its test-only CraftPlayer wrapper delegates accessors, the raw native handle,
+ * and scheduling to an actual Folia-owned pig, while native
  * World/Block/Entity APIs and the installed SlimeHUD updater remain unmodified.
  */
 public final class SlimeHudRegionProbe extends JavaPlugin {
@@ -106,7 +109,7 @@ public final class SlimeHudRegionProbe extends JavaPlugin {
             return true;
         }
         proof.put("connected_player", false);
-        proof.put("fixture", "Synthetic player accessors backed by a native entity owner; real production HUD updater");
+        proof.put("fixture", "Synthetic player accessors in a CraftPlayer wrapper backed by a native pig handle and scheduler; real production HUD updater");
         proof.put("server", Bukkit.getVersion());
         proof.put("server_name", Bukkit.getName());
         proof.put("minecraft_version", Bukkit.getMinecraftVersion());
@@ -337,31 +340,35 @@ public final class SlimeHudRegionProbe extends JavaPlugin {
             @Override public void sendMessage(ChatMessageType position, BaseComponent... components) { }
         };
         UUID playerId = UUID.nameUUIDFromBytes("SlimeHUDRegionFixture".getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        Player player = (Player) Proxy.newProxyInstance(getClassLoader(), new Class<?>[]{Player.class}, (proxy, method, args) ->
-                switch (method.getName()) {
-                    case "isOnline", "isValid" -> true;
-                    case "getUniqueId" -> playerId;
-                    case "getName" -> "SlimeHUDRegionFixture";
-                    case "getEyeLocation" -> eye();
-                    case "getWorld" -> owner.getWorld();
-                    case "getLocation" -> owner.getLocation();
-                    case "getScheduler" -> owner.getScheduler();
-                    case "getInventory" -> inventory;
-                    case "spigot" -> spigot;
-                    case "hashCode" -> playerId.hashCode();
-                    case "equals" -> proxy == args[0];
-                    case "toString" -> "SlimeHUD native owner accessor fixture";
-                    default -> throw new AssertionError("Unexpected player access: " + method.getName());
-                });
+        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
+        unsafeField.setAccessible(true);
+        Unsafe unsafe = (Unsafe) unsafeField.get(null);
+        OwnerBackedPlayer player = (OwnerBackedPlayer) unsafe.allocateInstance(OwnerBackedPlayer.class);
+        player.owner = owner;
+        player.probe = this;
+        player.playerId = playerId;
+        player.inventory = inventory;
+        player.messages = spigot;
+        // CraftEntity#getScheduler is final. Reuse the owner's real scheduler
+        // rather than creating an unregistered fake player entity/scheduler.
+        Field scheduler = CraftEntity.class.getDeclaredField("apiScheduler");
+        scheduler.setAccessible(true);
+        scheduler.set(player, scheduler.get(owner));
+        require(player.getHandleRaw() == ((CraftEntity) owner).getHandleRaw(),
+                "Synthetic player must retain the actual native owner handle");
+        require(player.getScheduler() == owner.getScheduler(),
+                "Synthetic player must retain the actual native owner scheduler");
+        require(Bukkit.isOwnedByCurrentRegion(player),
+                "Native ownership check must recognize the owner-backed player accessor");
+        proof.put("player_accessor_native_handle_matches_owner", true);
+        proof.put("player_accessor_scheduler_matches_owner", true);
+        proof.put("player_accessor_owned", true);
         BossBar bossBar = (BossBar) Proxy.newProxyInstance(getClassLoader(), new Class<?>[]{BossBar.class},
                 (proxy, method, args) -> switch (method.getName()) {
                     case "setVisible", "setTitle", "setColor", "removeAll" -> null;
                     case "toString" -> "HUD fixture display sink";
                     default -> throw new AssertionError("Unexpected bossbar access: " + method.getName());
                 });
-        Field unsafeField = Unsafe.class.getDeclaredField("theUnsafe");
-        unsafeField.setAccessible(true);
-        Unsafe unsafe = (Unsafe) unsafeField.get(null);
         PlayerWAILA updater = (PlayerWAILA) unsafe.allocateInstance(PlayerWAILA.class);
         set(updater, "player", player);
         set(updater, "bossBar", bossBar);
@@ -371,6 +378,36 @@ public final class SlimeHudRegionProbe extends JavaPlugin {
             set(updater, field, "");
         }
         return updater;
+    }
+
+    /**
+     * Only the accessor boundary is synthetic. The server's unmodified
+     * CraftEntity ownership check sees the real pig handle. No player is
+     * registered, no connection is created, and Bukkit's server is not replaced.
+     */
+    private static final class OwnerBackedPlayer extends CraftPlayer {
+        private Pig owner;
+        private SlimeHudRegionProbe probe;
+        private UUID playerId;
+        private PlayerInventory inventory;
+        private Player.Spigot messages;
+
+        private OwnerBackedPlayer() {
+            super(null, null); // Never invoked: this test-only accessor is allocated above.
+        }
+
+        @Override public boolean isOnline() { return true; }
+        @Override public boolean isValid() { return owner.isValid(); }
+        @Override public UUID getUniqueId() { return playerId; }
+        @Override public String getName() { return "SlimeHUDRegionFixture"; }
+        @Override public Location getEyeLocation() { return probe.eye(); }
+        @Override public World getWorld() { return owner.getWorld(); }
+        @Override public Location getLocation() { return owner.getLocation(); }
+        @Override public PlayerInventory getInventory() { return inventory; }
+        @Override public Player.Spigot spigot() { return messages; }
+        @Override public net.minecraft.world.entity.Entity getHandleRaw() {
+            return ((CraftEntity) owner).getHandleRaw();
+        }
     }
 
     private static void set(Object object, String name, Object value) throws Exception {

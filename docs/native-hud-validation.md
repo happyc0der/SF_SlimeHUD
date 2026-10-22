@@ -17,7 +17,9 @@ The ownership API already exists on the Paper 1.21.11 floor:
 
 `scripts/folia_raytrace_probe.py` creates a new disposable loopback world, installs the requested core and addon JARs, and compiles a test-only probe outside the production plugin. It never replaces an existing fixture directory.
 
-The probe uses synthetic `Player` accessors backed by an actual native pig's location and entity scheduler. Native `World`, block, item, region scheduler, and entity scheduler calls are real. The installed production `PlayerWAILA` bytecode is unchanged. Test-only allocation bypasses the constructor's connected-client BossBar registration; a display sink captures the resulting target label.
+The probe uses a test-only `CraftPlayer` subclass with synthetic player accessors backed by an actual native pig's location, raw native handle, and entity scheduler. The wrapper is allocated without creating or registering a `ServerPlayer` or connection. Its inherited scheduler is the pig's actual scheduler; the unmodified server ownership API checks the pig's actual native handle. Each receipt requires proof that the handle and scheduler are identical to the owner's and that the native ownership check succeeds. This replaces the former interface proxy, which could not pass the server's `CraftEntity` ownership cast when the HUD began publishing already-owned snapshots immediately. The fixture compiles against the same bootstrapped native server JAR it will run on.
+
+Native `World`, block, item, region scheduler, and entity scheduler calls are real. Neither Bukkit's global server nor the installed production `PlayerWAILA` bytecode is replaced. Test-only allocation still bypasses the constructor's connected-client BossBar registration; a display sink captures the resulting target label. These synthetic accessors are not evidence of a connected player; connected-client targeting and WIT packet checks are separate tests.
 
 The candidate must:
 

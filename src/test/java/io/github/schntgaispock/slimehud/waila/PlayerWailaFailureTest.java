@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import io.github.schntgaispock.slimehud.integration.WITIntegration;
+import io.github.schntgaispock.slimehud.SlimeHUD;
 import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import io.papermc.paper.threadedregions.scheduler.RegionScheduler;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
@@ -24,6 +26,7 @@ import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.boss.BossBar;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -40,7 +43,10 @@ class PlayerWailaFailureTest {
     private Server previousServer;
     private PlayerWAILA hud;
     private final AtomicBoolean visible = new AtomicBoolean(true);
+    private final AtomicBoolean sneaking = new AtomicBoolean(false);
     private final AtomicInteger actionBarClears = new AtomicInteger();
+    private final YamlConfiguration config = new YamlConfiguration();
+    private MockedStatic<SlimeHUD> pluginAccess;
 
     @BeforeEach
     void prepareProductionControllerWithImmediateSchedulers() throws Exception {
@@ -72,6 +78,7 @@ class PlayerWailaFailureTest {
         };
         Player player = proxy(Player.class, (object, method, arguments) -> switch (method.getName()) {
             case "isOnline", "isValid" -> true;
+            case "isSneaking" -> sneaking.get();
             case "getScheduler" -> entities;
             case "spigot" -> messages;
             default -> throw new AssertionError("Unexpected player call: " + method);
@@ -99,10 +106,20 @@ class PlayerWailaFailureTest {
         setField(PlayerWAILA.class, hud, "facingBlockInfo", "Previous details");
         // Avoid needing a live plugin logger; recordFailure still records the error.
         setField(PlayerWAILA.class, hud, "lastFailureLogEpochMillis", System.currentTimeMillis());
+
+        // The native HUD checks the plugin config even when a failed lookup
+        // returns an empty snapshot. All tests need a valid plugin/config.
+        SlimeHUD plugin = mock(SlimeHUD.class);
+        when(plugin.getConfig()).thenReturn(config);
+        pluginAccess = mockStatic(SlimeHUD.class);
+        pluginAccess.when(SlimeHUD::getInstance).thenReturn(plugin);
     }
 
     @AfterEach
     void restoreServer() throws Exception {
+        if (pluginAccess != null) {
+            pluginAccess.close();
+        }
         setField(Bukkit.class, null, "server", previousServer);
     }
 
@@ -148,33 +165,39 @@ class PlayerWailaFailureTest {
         assertEquals(nativeMode == DisplayMode.ACTIONBAR ? 1 : 0, actionBarClears.get());
     }
 
-    @ParameterizedTest
-    @EnumSource(DisplayMode.class)
-    void witActionBarTakeoverCannotEraseTheNewWitText(DisplayMode nativeMode) throws Exception {
-        setField(PlayerWAILA.class, hud, "displayMode", nativeMode);
-        delegateToWit(true);
-
+    @Test
+    void crouchOnlyHidesExistingDisplayOnStandingUpdate() {
+        config.set("waila.crouch-only", true);
+        hud.run();
         assertEmptyDisplay();
-        assertEquals(0, actionBarClears.get(), "WIT already owns the shared ActionBar channel");
     }
 
-    @ParameterizedTest
-    @EnumSource(DisplayMode.class)
-    void witBossBarTakeoverClearsAnOldNativeActionBar(DisplayMode nativeMode) throws Exception {
-        setField(PlayerWAILA.class, hud, "displayMode", nativeMode);
-        delegateToWit(false);
-
+    @Test
+    void releasingShiftClearsDisplayImmediatelyWithoutWaitingForTick() {
+        config.set("waila.crouch-only", true);
+        hud.onSneakChanged(false);
         assertEmptyDisplay();
-        assertEquals(nativeMode == DisplayMode.ACTIONBAR ? 1 : 0, actionBarClears.get());
     }
 
-    private void delegateToWit(boolean actionBar) {
-        Player player = hud.getPlayer();
-        try (MockedStatic<WITIntegration> wit = mockStatic(WITIntegration.class)) {
-            wit.when(() -> WITIntegration.updateDisplayOwnership(player)).thenReturn(true);
-            wit.when(() -> WITIntegration.isUsingActionBar(player)).thenReturn(actionBar);
-            hud.run();
-        }
+    @Test
+    void normalModeDoesNotHideHudOnShiftRelease() {
+        config.set("waila.crouch-only", false);
+        hud.onSneakChanged(false);
+        assertEquals("Previous block", hud.getFacingBlock());
+        assertTrue(visible.get());
+    }
+
+    @Test
+    void delayedInspectionCannotRenderAfterShiftRelease() throws Exception {
+        config.set("waila.crouch-only", true);
+        Class<?> snapshotClass = Class.forName(PlayerWAILA.class.getName() + "$HudSnapshot");
+        var constructor = snapshotClass.getDeclaredConstructor(String.class, String.class);
+        constructor.setAccessible(true);
+        Object snapshot = constructor.newInstance("New block", "Energy: 42");
+        Method apply = PlayerWAILA.class.getDeclaredMethod("applySnapshot", long.class, snapshotClass);
+        apply.setAccessible(true);
+        apply.invoke(hud, 7L, snapshot);
+        assertEmptyDisplay();
     }
 
     private void inspectFailingBlock(long sequence) throws Exception {

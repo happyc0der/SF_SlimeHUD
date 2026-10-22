@@ -12,7 +12,7 @@ SLIMEFUN_VERSION="${SLIMEFUN_VERSION:-4.1.75}"
 SLIMEFUN_SHA256="${SLIMEFUN_SHA256:-206cd1e54e81bf7d3968b2b2a4bd698f1271dca9dd474f2aebf4a7a195c1b060}"
 SLIMEFUN_SOURCE="${SLIMEFUN_SOURCE:-7f702e3565a381aeeefd99555f2c8fe818858e9c}"
 SLIMEFUN_URL="${SLIMEFUN_URL:-https://github.com/wickidcow/Slimefun-Legacy/releases/download/v${SLIMEFUN_VERSION}/Slimefun-Legacy${SLIMEFUN_VERSION}.jar}"
-USER_AGENT="${RUNTIME_SMOKE_USER_AGENT:-SF_SlimeHUD-CI/2.0.5 (https://github.com/wickidcow/SF_SlimeHUD)}"
+USER_AGENT="${RUNTIME_SMOKE_USER_AGENT:-SF_SlimeHUD-CI/2.0.6 (https://github.com/wickidcow/SF_SlimeHUD)}"
 STARTUP_TIMEOUT_SECONDS="${RUNTIME_SMOKE_STARTUP_TIMEOUT:-300}"
 SHUTDOWN_TIMEOUT_SECONDS="${RUNTIME_SMOKE_SHUTDOWN_TIMEOUT:-60}"
 WIT_VERSION_ID="${WIT_VERSION_ID:-}"
@@ -53,7 +53,7 @@ curl --fail-with-body -L -sS -H "User-Agent: ${USER_AGENT}" \
     "$SLIMEFUN_URL"
 test -s "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar"
 printf '%s  %s\n' "$SLIMEFUN_SHA256" "$WORK_DIR/plugins/Slimefun-Legacy${SLIMEFUN_VERSION}.jar" | sha256sum --check
-cp "$ADDON_JAR" "$WORK_DIR/plugins/SF_SlimeHUD2.0.5.jar"
+cp "$ADDON_JAR" "$WORK_DIR/plugins/SF_SlimeHUD2.0.6.jar"
 mkdir -p "$WORK_DIR/plugins/Slimefun"
 cat > "$WORK_DIR/plugins/Slimefun/config.yml" <<'SLIMEFUN_CONFIG'
 options:
@@ -167,7 +167,7 @@ Channel: ${SERVER_CHANNEL}
 Download: ${SERVER_URL}
 Java: $(java -version 2>&1 | head -n 1)
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-Addon: SF_SlimeHUD 2.0.5
+Addon: SF_SlimeHUD 2.0.6
 What Is That?: ${WIT_VERSION_ID:-not installed}
 Expectation: ${EXPECTATION}
 EOF_BUILD
@@ -268,7 +268,7 @@ Minecraft: ${MC_VERSION}
 Build: ${SERVER_BUILD}
 Channel: ${SERVER_CHANNEL}
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-SF_SlimeHUD: 2.0.5
+SF_SlimeHUD: 2.0.6
 Server reached Done: yes
 Slimefun enabled: no
 SlimeHUD dependency handling: graceful disable observed
@@ -292,8 +292,8 @@ if ! grep -Fq "Enabling Slimefun v${SLIMEFUN_VERSION}" "$CONSOLE_LOG"; then
     cat "$CONSOLE_LOG" >&2 || true
     exit 1
 fi
-if ! grep -Fq 'Enabling SlimeHUD v2.0.5' "$CONSOLE_LOG"; then
-    echo "${FAMILY} ${MC_VERSION}: SlimeHUD 2.0.5 enable line was not observed." >&2
+if ! grep -Fq 'Enabling SlimeHUD v2.0.6' "$CONSOLE_LOG"; then
+    echo "${FAMILY} ${MC_VERSION}: SlimeHUD 2.0.6 enable line was not observed." >&2
     cat "$CONSOLE_LOG" >&2 || true
     exit 1
 fi
@@ -334,7 +334,7 @@ Minecraft: ${MC_VERSION}
 Build: ${SERVER_BUILD}
 Channel: ${SERVER_CHANNEL}
 Slimefun Legacy: ${SLIMEFUN_VERSION}
-SF_SlimeHUD: 2.0.5
+SF_SlimeHUD: 2.0.6
 Server reached Done: yes
 Slimefun enabled: yes
 SlimeHUD enabled: yes

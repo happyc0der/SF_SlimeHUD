@@ -12,6 +12,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 
 public final class WAILAManager implements Listener {
 
@@ -120,5 +121,13 @@ public final class WAILAManager implements Listener {
     @EventHandler
     public void onPlayerChangeWorld(PlayerChangedWorldEvent event) {
         refreshPlayer(event.getPlayer());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
+        PlayerWAILA waila = wailas.get(event.getPlayer().getUniqueId());
+        if (waila != null) {
+            waila.onSneakChanged(event.isSneaking());
+        }
     }
 }

@@ -1,23 +1,13 @@
 options:
   placeholder-api-support: true
 
-integrations:
-  what-is-that:
-    # Optional integration with the What Is That? (WIT) plugin.
-    # When WIT is installed and active for a player, WIT owns the visible HUD
-    # and SF_SlimeHUD supplies Slimefun machine/energy/cargo information through
-    # WIT's API. If WIT is absent, hidden, or disabled, SF_SlimeHUD automatically
-    # falls back to its own BossBar/ActionBar display.
-    enabled: true
-
-    # Let SF_SlimeHUD provide vanilla block details while WIT owns the visible
-    # display. This keeps vanilla tool symbols and SlimeHUD's vanilla details
-    # consistent without changing WIT's entity handling.
-    use-slimehud-vanilla: true
-
 waila:
   # Disable the HUD globally.
   disabled: false
+
+  # Show HUD information only while the player is holding Shift.
+  # Defaults to false for existing players and servers.
+  crouch-only: false
 
   # Worlds where the HUD is disabled.
   disabled-in: []
@@ -29,8 +19,7 @@ waila:
   # Legacy compatibility: old configs used bossbar/hotbar here.
   location: bossbar
 
-  # How far players can inspect blocks and dropped items when SF_SlimeHUD owns
-  # the display. WIT uses its own reach settings while the WIT bridge is active.
+  # How far players can inspect blocks and dropped items using the native HUD.
   max-distance: 8
 
   # Update interval in ticks.

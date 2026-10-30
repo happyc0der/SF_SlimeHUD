@@ -81,7 +81,7 @@ public final class VanillaInfoProvider {
 
         String tool = hint.label();
         if (heldItem != null && !heldItem.getType().isAir()) {
-            tool += isCorrectHeldTool(block, heldItem) ? " (held ✓)" : " (held ✗)";
+            tool += isCorrectHeldTool(block, heldItem, hint) ? " (held ✓)" : " (held ✗)";
         }
         return "Tool: " + tool;
     }
@@ -229,12 +229,22 @@ public final class VanillaInfoProvider {
         return new ToolHint(key, label);
     }
 
-    private static boolean isCorrectHeldTool(Block block, ItemStack heldItem) {
+    private static boolean isCorrectHeldTool(Block block, ItemStack heldItem, ToolHint hint) {
         if (block.getType() == Material.SPAWNER) {
             SlimefunItem slimefunItem = SlimefunItem.getByItem(heldItem);
             return slimefunItem != null && PICKAXE_OF_CONTAINMENT_ID.equals(slimefunItem.getId());
         }
-        return block.isPreferredTool(heldItem);
+        // Block#isPreferredTool is true for ANY item on blocks that need no tool (grass, dirt...),
+        // so also require the held item to belong to the tool family the hint names.
+        Material held = heldItem.getType();
+        boolean family = switch (hint.key()) {
+            case "pickaxe" -> Tag.ITEMS_PICKAXES.isTagged(held);
+            case "axe" -> Tag.ITEMS_AXES.isTagged(held);
+            case "shovel" -> Tag.ITEMS_SHOVELS.isTagged(held);
+            case "hoe" -> Tag.ITEMS_HOES.isTagged(held);
+            default -> true;
+        };
+        return family && block.isPreferredTool(heldItem);
     }
 
     private static String humanize(String value) {
